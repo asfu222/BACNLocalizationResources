@@ -25,6 +25,8 @@ jobs:
       - name: Decompress assets
         run: |
           find ./assets -name '*.gz' -exec sh -c 'gzip -d "{}"' \;
+          chmod +x update.sh
+          ./update.sh
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
