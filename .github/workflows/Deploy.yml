@@ -2,9 +2,8 @@ name: Deploy to GitHub Pages
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - main
+  schedule:
+    - cron: '0 16 * * *' # 零点北京时间
 
 permissions:
   contents: write
