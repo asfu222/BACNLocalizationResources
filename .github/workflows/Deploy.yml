@@ -3,7 +3,7 @@ name: Deploy to GitHub Pages
 on:
   workflow_dispatch:
   schedule:
-    - cron: '0 16 * * *' # 零点北京时间
+      - cron: '0 * * * *' # 每小时
 
 permissions:
   contents: write
