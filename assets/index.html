@@ -1,69 +1,277 @@
 <!DOCTYPE html>
-      <html lang="zh">
-      <head>
-          <meta charset="UTF-8">
-          <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          <title>蔚蓝档案日服汉化</title>
-          <style>
-              body {
-                  font-family: Arial, sans-serif;
-                  display: flex;
-                  flex-direction: column;
-                  align-items: center;
-                  justify-content: center;
-                  height: 100vh;
-                  margin: 0;
-                  background-color: #f4f4f4;
-              }
-              .container {
-                  text-align: center;
-              }
-              .button {
-                  display: block;
-                  width: 300px;
-                  padding: 15px;
-                  margin: 10px;
-                  font-size: 18px;
-                  font-weight: bold;
-                  text-align: center;
-                  text-decoration: none;
-                  color: white;
-                  background-color: #007bff;
-                  border-radius: 10px;
-                  transition: 0.3s;
-              }
-              .button:hover {
-                  background-color: #0056b3;
-              }
-              .icons {
-                  position: fixed;
-                  bottom: 20px;
-                  right: 20px;
-                  display: flex;
-                  gap: 10px;
-              }
-              .icon {
-                  width: 40px;
-                  height: 40px;
-                  transition: 0.3s;
-              }
-              .icon:hover {
-                  opacity: 0.7;
-              }
-          </style>
-      </head>
-      <body>
-          <div class="container">
-              <a href="https://github.com/asfu222/BACNLocalizationResources/raw/refs/heads/main/DNSConfig.mobileconfig" class="button">下载DNS设置</a>
-              <a href="http://150.136.163.113:8080" class="button">下载证书</a>
-          </div>
-          <div class="icons">
-              <a href="https://github.com/asfu222/BAJP2CNPatch" target="_blank">
-                  <img src="https://www.github.com/favicon.ico" class="icon" alt="GitHub">
-              </a>
-              <a href="https://space.bilibili.com/3546839682911153" target="_blank">
-                  <img src="https://www.bilibili.com/favicon.ico" class="icon" alt="Bilibili">
-              </a>
-          </div>
-      </body>
-      </html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>蔚蓝档案日服汉化</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f4f4f4;
+        }
+        .container {
+            text-align: center;
+        }
+        .button-container {
+            position: relative;
+            width: 300px;
+        }
+        .button {
+            display: block;
+            width: 100%;
+            padding: 15px;
+            margin: 10px 0;
+            font-size: 18px;
+            font-weight: bold;
+            text-align: center;
+            text-decoration: none;
+            color: white;
+            background-color: #007bff;
+            border-radius: 10px;
+            cursor: pointer;
+            box-sizing: border-box;
+        }
+        .button:hover {
+            background-color: #0056b3;
+        }
+        .dropdown {
+            display: none;
+            position: absolute;
+            top: 45px;
+            width: 100%;
+            background-color: #fff;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+            z-index: 1;
+            padding: 10px 0;
+            box-sizing: border-box;
+        }
+        .dropdown a {
+            padding: 10px;
+            color: #333;
+            text-decoration: none;
+            display: block;
+            text-align: center;
+        }
+        .dropdown a:hover {
+            background-color: #007bff;
+            color: white;
+        }
+        .button-container.open .dropdown {
+            display: block;
+        }
+        .dropdown a.selected {
+            background-color: #0056b3;
+            color: white;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.4);
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            width: 300px;
+            text-align: center;
+        }
+        .modal-content button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+        .modal-content button:hover {
+            background-color: #0056b3;
+        }
+        .icons {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            display: flex;
+            gap: 10px;
+        }
+        .icon {
+            width: 40px;
+            height: 40px;
+            transition: 0.3s;
+        }
+        .icon:hover {
+            opacity: 0.7;
+        }
+        #selectedGroupDisplay {
+            display: inline-block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="https://github.com/asfu222/BACNLocalizationResources/raw/refs/heads/main/DNSConfig.mobileconfig" class="button">下载DNS设置</a>
+        <a href="http://150.136.163.113:8080" class="button">下载证书</a>
+		<input type="hidden" id="localizationGroup" value="">
+
+        <div id="buttonContainer" class="button-container">
+            <button id="localizationButton" class="button">更换汉化资源</button>
+            <div class="dropdown">
+                <a href="#" onclick="updateSelection('shale')">国服(shale)</a>
+                <a href="#" onclick="updateSelection('beicheng')">北辰(beicheng)</a>
+                <a href="#" onclick="updateSelection('ourplay')">OurPlay(ourplay)</a>
+            </div>
+        </div>
+        <button id="confirmButton" class="button">确认更换</button>
+        <span id="selectedGroupDisplay" style="font-size: 16px; margin-left: 10px;"></span>
+        <div id="dnsAlertMessage" style="color: red; font-size: 14px; margin-top: 10px;"></div>
+    </div>
+    <div id="successModal" class="modal">
+        <div class="modal-content">
+            <p id="modalMessage">操作成功！</p>
+            <button onclick="closeModal()">关闭</button>
+        </div>
+    </div>
+    <div id="dnsPromptModal" class="modal">
+        <div class="modal-content">
+            <p>请先连接到DNS并设“蔚蓝档案汉化”为Root证书！</p>
+            <button onclick="closeDnsModal()">关闭</button>
+        </div>
+    </div>
+    <div class="icons">
+        <a href="https://github.com/asfu222/BAJP2CNPatch" target="_blank">
+            <img src="https://www.github.com/favicon.ico" class="icon" alt="GitHub">
+        </a>
+        <a href="https://space.bilibili.com/3546839682911153" target="_blank">
+            <img src="https://www.bilibili.com/favicon.ico" class="icon" alt="Bilibili">
+        </a>
+    </div>
+    <script>
+	    let reroute_status = false;
+        function checkDnsRerouteStatus(callback) {
+			if (reroute_status === true) {
+				callback(true);
+				return;
+			}
+            fetch("https://prod-clientpatch.bluearchiveyostar.com/get_dns_reroute_status")
+                .then(response => response.json())
+                .then(data => {
+                    const reroutingStatus = data.rerouting === "true";
+					reroute_status = reroutingStatus;
+                    callback(reroutingStatus);
+                })
+                .catch(e => {
+                    callback(false);
+                });
+        }
+        function updateUIBasedOnReroutingStatus(reroutingStatus) {
+            const localizationButton = document.getElementById("localizationButton");
+            const confirmButton = document.getElementById("confirmButton");
+            const selectedGroupDisplay = document.getElementById("selectedGroupDisplay");
+            if (reroutingStatus) {
+                closeDnsModal();
+                selectedGroupDisplay.style.display = "inline-block"; 
+                fetchCurrentChoice();
+            } else {
+                showDnsModal();
+                selectedGroupDisplay.style.display = "none"; 
+            }
+        }
+        function showDnsModal() {
+            document.getElementById("dnsPromptModal").style.display = "flex";
+        }
+        function closeDnsModal() {
+            document.getElementById("dnsPromptModal").style.display = "none";
+        }
+        function toggleDropdown() {
+            document.getElementById("buttonContainer").classList.toggle("open");
+        }
+        function changeLocalization() {
+            checkDnsRerouteStatus(function(reroutingStatus) {
+                if (reroutingStatus) {
+                    const selectedGroup = document.getElementById("localizationGroup").value;
+                    fetch("https://prod-clientpatch.bluearchiveyostar.com/change_localization_group", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ group: selectedGroup })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        showModal(data.message || "操作成功！");
+                    })
+                    .catch(error => {
+                        showModal("请求失败，请检查网络连接！");
+						reroute_status = false;
+                    });
+                } else {
+                    showDnsModal();
+                }
+            });
+        }
+        function showModal(message) {
+            document.getElementById("successModal").style.display = "flex";
+            document.getElementById("modalMessage").textContent = message;
+        }
+        function closeModal() {
+            document.getElementById("successModal").style.display = "none";
+        }
+        function fetchCurrentChoice() {
+            fetch("https://prod-clientpatch.bluearchiveyostar.com/get_current_localization_group")
+                .then(response => response.json())
+                .then(data => {
+                    const currentGroup = data.localizationGroup;
+                    document.getElementById("localizationGroup").value = currentGroup;
+                    document.getElementById("selectedGroupDisplay").textContent = `当前选择: ${currentGroup}`;
+                })
+                .catch(error => {
+				console.error('Error fetching current choice:', error);
+				reroute_status = false;
+				});
+        }
+        function updateSelection(group) {
+            checkDnsRerouteStatus(function(reroutingStatus) {
+                if (reroutingStatus) {
+                    document.getElementById("localizationGroup").value = group;
+                    toggleDropdown();
+                    document.getElementById("selectedGroupDisplay").textContent = `当前选择: ${group}`;
+                } else {
+                    showDnsModal();
+                }
+            });
+        }
+        document.addEventListener("DOMContentLoaded", function() {
+            document.getElementById("localizationButton").addEventListener("click", function() {
+                checkDnsRerouteStatus(function(reroutingStatus) {
+                    if (reroutingStatus) {
+                        toggleDropdown();
+                    } else {
+                        showDnsModal();
+                    }
+                });
+            });
+            document.getElementById("confirmButton").addEventListener("click", function() {
+                checkDnsRerouteStatus(function(reroutingStatus) {
+                    if (reroutingStatus) {
+                        changeLocalization();
+                    } else {
+                        showDnsModal();
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>
