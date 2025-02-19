@@ -6,16 +6,17 @@ from typing import Any, List
 import json
 import requests
 from pathlib import Path
+import subprocess
 
-
-def patch_files(file_path, files_path) -> None:
+def patch_files(original_catalog_path, files_path, bypass_path = None) -> None:
     done_patching = False
     bytes_data = None
     files_to_patch = [f for f in os.listdir(files_path) if os.path.isfile(os.path.join(files_path, f))]
-
-    with open(file_path, 'rb') as f_read:
+    with open(original_catalog_path, 'rb') as f_read:
         bytes_data = bytearray(f_read.read())
     cursor = BytesIO(initial_bytes=bytes_data)
+    if bypass_path is not None and os.path.exists(bypass_path):
+        bypass_path = None
 
     def read_i8() -> Any:
         return struct.unpack('b', cursor.read(1))[0]
@@ -57,10 +58,24 @@ def patch_files(file_path, files_path) -> None:
             size = read_i64()
             crc_pos = cursor.tell()
             crc = read_i64()
-            struct.pack_into("q", bytes_data, size_pos, os.path.getsize(os.path.join(files_path, key)))
-            struct.pack_into('q', bytes_data, crc_pos, calculate_crc32(os.path.join(files_path, key)))
-            print(f"TableCatalog.bytes: 修改{key} 文件大小值 {size} -> {os.path.getsize(os.path.join(files_path, key))}")
-            print(f"TableCatalog.bytes: 修改{key} crc值 {crc} -> {calculate_crc32(os.path.join(files_path, key))}")
+            patched_file = os.path.join(files_path, key)
+            patched_file_size = os.path.getsize(patched_file)
+            struct.pack_into("q", bytes_data, size_pos, patched_file_size)
+            struct.pack_into('q', bytes_data, crc_pos, calculate_crc32(patched_file))
+            print(f"TableCatalog.bytes: 修改{key} 文件大小值 {size} -> {patched_file_size}")
+            print(f"TableCatalog.bytes: 修改{key} crc值 {crc} -> {calculate_crc32(patched_file)}")
+            if bypass_path is not None:
+                if size == patched_file_size:
+                    print(f"发现可直接过校验的文件({patched_file})，正在生成跟原CRC一样的资源")
+                    bypass_path.mkdir(parents=True, exist_ok=True)
+                    subprocess.run([
+                        "./crcmanip-cli", "patch",
+                        patched_file, os.path.join(bypass_path, key),
+                        str(crc), "-a", "CRC32", "-o", "-p", "-4"
+                    ])
+                    print("生成完毕！")
+                else:
+                    print(f"{patched_file}: 不可生成直接过校验的资源（资源文件大小值必须跟日服原文件一致）。")
             files_to_patch.remove(key)
             if len(files_to_patch) == 0:
                 repack_data()
@@ -93,5 +108,12 @@ def calculate_crc32(file_path) -> int:
     with open(file_path, 'rb') as f:
         return binascii.crc32(f.read()) & 0xFFFFFFFF
 
-for parent in [file.parent for file in Path('./assets').rglob("ExcelDB.db")]:
-    patch_files('./TableCatalog.bytes', parent)
+for asset_dir in Path('./assets').iterdir():
+    latest_dir = asset_dir / "latest"
+    db_path = latest_dir / "TableBundles" / "ExcelDB.db"
+
+    if db_path.exists():
+        original_parent = db_path.parent
+        bypass_path = asset_dir / "latest_crcbypass" / "TableBundles"
+
+        patch_files('./TableCatalog.bytes', original_parent, bypass_path)
