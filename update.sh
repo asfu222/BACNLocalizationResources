@@ -37,4 +37,5 @@ download_file() {
 # Download the files
 download_file "$TABLE_CATALOG" "TableCatalog.bytes"
 
+chmod +x ./crcmanip-cli
 $PYTHON_CMD patch_table_catalog.py
