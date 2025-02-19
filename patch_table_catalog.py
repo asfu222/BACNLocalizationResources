@@ -71,7 +71,7 @@ def patch_files(original_catalog_path, files_path, bypass_path = None) -> None:
                     subprocess.run([
                         "./crcmanip-cli", "patch",
                         patched_file, os.path.join(bypass_path, key),
-                        str(crc), "-a", "CRC32", "-o", "-p", "-4"
+                        f'{crc:x}', "-a", "CRC32", "-o", "-p", "-4"
                     ])
                     print("生成完毕！")
                 else:
