@@ -72,7 +72,7 @@ def patch_files(original_catalog_path, files_path, bypass_path = None) -> None:
                         "./crcmanip-cli", "patch",
                         patched_file, os.path.join(bypass_path, key),
                         f'{crc:x}', "-a", "CRC32", "-o", "-p", "-4"
-                    ])
+                    ], stdout=subprocess.DEVNULL)
                     print("生成完毕！")
                 else:
                     print(f"{patched_file}: 不可生成直接过校验的资源（资源文件大小值必须跟日服原文件一致）。")
