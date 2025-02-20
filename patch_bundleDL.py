@@ -1,5 +1,9 @@
 import json
 import os
+from pathlib import Path
+import subprocess
+import binascii
+
 def calculate_crc32(file_path) -> int:
     with open(file_path, 'rb') as f:
         return binascii.crc32(f.read()) & 0xFFFFFFFF

@@ -4,7 +4,6 @@ import struct
 from io import BytesIO
 from typing import Any, List
 import json
-import requests
 from pathlib import Path
 import subprocess
 
