@@ -11,14 +11,10 @@ fi
 
 echo "Using $PYTHON_CMD"
 
-TB_BASE_URL=$(export $(grep -v '^#' ba.env | xargs) && curl -s "$BA_SERVER_URL" | grep -oP '"AddressablesCatalogUrlRoot": *"\K[^"]+' | tail -n 1)"/TableBundles/"
+export $(grep -v '^#' ba.env | xargs)
 
+BASE_URL=$(curl -s "$BA_SERVER_URL" | grep -oP '"AddressablesCatalogUrlRoot": *"\K[^"]+' | tail -n 1)
 
-# Define file URLs
-TABLE_CATALOG="${TB_BASE_URL}TableCatalog.bytes"
-TABLE_CATALOG_HASH="${TB_BASE_URL}TableCatalog.hash"
-
-# Download function
 download_file() {
     local url=$1
     local output=$2
@@ -34,8 +30,10 @@ download_file() {
     fi
 }
 
-# Download the files
-download_file "$TABLE_CATALOG" "TableCatalog.bytes"
+download_file "${BASE_URL}/TableBundles/TableCatalog.bytes" "TableCatalog.bytes"
+download_file "${BASE_URL}/Android/bundleDownloadInfo.json" "bundleDownloadInfo-Android.json"
+download_file "${BASE_URL}/iOS/bundleDownloadInfo.json" "bundleDownloadInfo-iOS.json"
 
 chmod +x ./crcmanip-cli
 $PYTHON_CMD patch_table_catalog.py
+$PYTHON_CMD patch_bundleDL.py
