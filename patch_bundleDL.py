@@ -39,7 +39,7 @@ def apply_patch(platform: str):
             new_size = asset.stat().st_size
             new_crc = calculate_crc32(asset)
             print(f'bundleDownloadInfo.json: 修改{asset.name} 文件大小值 {info[asset.name]["Size"]} -> {new_size}')
-            print(f'bundleDownloadInfo.json: 修改{asset.name} 文件大小值 {info[asset.name]["Crc"]} -> {new_crc}')
+            print(f'bundleDownloadInfo.json: 修改{asset.name} CRC值 {info[asset.name]["Crc"]} -> {new_crc}')
             info[asset.name]["Size"] = new_size
             info[asset.name]["Crc"] = new_crc
         with open(assets_path / "bundleDownloadInfo.json", "wb") as f:
