@@ -17,7 +17,7 @@ def apply_patch(platform: str):
 
         with open(f"bundleDownloadInfo-{platform}.json", "r", encoding = "utf8") as f:
             data = json.loads(f.read())
-            info = data["BundleFiles"]
+            info = {struct["Name"]:struct for struct in data["BundleFiles"]}
 
         asset_list = [asset for asset in asset_list if asset.name in info]
 
@@ -37,7 +37,7 @@ def apply_patch(platform: str):
             print("生成完毕！")
         for asset in asset_list:
             new_size = asset.stat().st_size
-            new_crc = calculate_crc32(file_path)
+            new_crc = calculate_crc32(asset)
             print(f'bundleDownloadInfo.json: 修改{asset.name} 文件大小值 {info[asset.name]["Size"]} -> {new_size}')
             print(f'bundleDownloadInfo.json: 修改{asset.name} 文件大小值 {info[asset.name]["Crc"]} -> {new_crc}')
             info[asset.name]["Size"] = new_size
