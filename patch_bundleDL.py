@@ -16,7 +16,8 @@ def apply_patch(platform: str):
         asset_list = assets_path.iterdir()
 
         with open(f"bundleDownloadInfo-{platform}.json", "r", encoding = "utf8") as f:
-            info = json.loads(f.read())["BundleFiles"]
+            data = json.loads(f.read())
+            info = data["BundleFiles"]
 
         asset_list = [asset for asset in asset_list if asset.name in info]
 
@@ -42,7 +43,7 @@ def apply_patch(platform: str):
             info[asset.name]["Size"] = new_size
             info[asset.name]["Crc"] = new_crc
         with open(assets_path / "bundleDownloadInfo.json", "wb") as f:
-            f.write(json.dumps(info, separators=(',', ':')).encode())
+            f.write(json.dumps(data, separators=(',', ':')).encode())
             print(f"{platform}: 已生成对应的bundleDownloadInfo.json")
 apply_patch("Android")
 apply_patch("iOS")
