@@ -10,11 +10,10 @@ def calculate_crc32(file_path) -> int:
 def apply_patch(platform: str): 
     for resource_dir in Path('./assets').iterdir():
         assets_path = resource_dir / "latest" / platform
-
         if not assets_path.exists():
-            return
+            continue
 
-        asset_list = asset_path.iterdir()
+        asset_list = assets_path.iterdir()
 
         with open(f"bundleDownloadInfo-{platform}.json", "r", encoding = "utf8") as f:
             info = json.loads(f.read())["BundleFiles"]
@@ -43,7 +42,7 @@ def apply_patch(platform: str):
             info[asset.name]["Size"] = new_size
             info[asset.name]["Crc"] = new_crc
         with open(assets_path / "bundleDownloadInfo.json", "wb") as f:
-            f.write(json.dumps(separators=(',', ':')).encode())
+            f.write(json.dumps(info, separators=(',', ':')).encode())
             print(f"{platform}: 已生成对应的bundleDownloadInfo.json")
 apply_patch("Android")
 apply_patch("iOS")
