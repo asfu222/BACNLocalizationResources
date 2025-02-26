@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
   push:
   schedule:
-      - cron: '0 * * * *' # 每小时
+    - cron: '0 * * * *' # 每小时
 
 permissions:
   contents: write
@@ -16,19 +16,40 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
+      - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Setup Pages
+      - name: Setup GitHub Pages
         uses: actions/configure-pages@v5
-        
-      - name: Decompress assets
+
+      - name: Check and Compress Database Files
         run: |
-          find ./assets -name '*.gz' -exec sh -c 'gzip -d "{}"' \;
+          find ./assets -name '*.db' | while read -r file; do
+            gzip -9 "$file"
+            echo "已压缩：$file"
+            rm -f "$file"
+          done
+
+      - name: Commit Compressed Database Files
+        run: |
+          if [[ -n "$(git status --porcelain)" ]]; then
+            git config --global user.name "github-actions"
+            git config --global user.email "github-actions@github.com"
+            git add .
+            git commit -m "压缩资源 [skip ci]"
+            git push
+          fi
+
+      - name: Decompress Assets
+        run: |
+          find ./assets -name '*.gz' -exec gzip -d "{}" \;
+
+      - name: Update Assets
+        run: |
           chmod +x update.sh
           ./update.sh
 
-      - name: Upload artifact
+      - name: Upload Artifact to GitHub Pages
         uses: actions/upload-pages-artifact@v3
         with:
           path: './assets'
