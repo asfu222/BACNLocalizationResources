@@ -6,6 +6,8 @@ from typing import Any, List
 import json
 from pathlib import Path
 import subprocess
+from pad import pad_file
+import shutil
 
 def patch_files(original_catalog_path, files_path, bypass_path = None) -> None:
     done_patching = False
@@ -64,6 +66,19 @@ def patch_files(original_catalog_path, files_path, bypass_path = None) -> None:
             print(f"TableCatalog.bytes: 修改{key} 文件大小值 {size} -> {patched_file_size}")
             print(f"TableCatalog.bytes: 修改{key} crc值 {crc} -> {calculate_crc32(patched_file)}")
             if bypass_path is not None:
+                if size > patched_file_size and key.endswith(".db"):
+                    tmp_file = os.path.join(files_path, "temp", key)
+                    os.makedirs(os.path.join(files_path, "temp"), exist_ok=True)
+                    shutil.copy(patched_file, tmp_file)
+                    pad_file(tmp_file, size)
+                    subprocess.run(["git", "config", "--global", "user.name", "github-actions"])
+                    subprocess.run(["git", "config", "--global", "user.email", "github-actions@github.com"])
+                    subprocess.run(f"gzip -cf -9 {tmp_file} > {patched_file}.gz", shell=True)
+                    subprocess.run(["git", "add", patched_file + ".gz"])
+                    subprocess.run(["git", "commit", "-m", f"修复文件大小： {patched_file} [skip ci]"])
+                    subprocess.run(["git", "push"])
+                    patched_file = tmp_file
+                    size = patched_file_size
                 if size == patched_file_size:
                     print(f"发现可直接过校验的文件({patched_file})，正在生成跟原CRC一样的资源")
                     bypass_path.mkdir(parents=True, exist_ok=True)
@@ -94,7 +109,6 @@ def patch_files(original_catalog_path, files_path, bypass_path = None) -> None:
             f_write.write(bytes_data)
             done_patching = True
             print('已生成对应的TableCatalog.bytes')
-
     _ = read_i8()  # Skip 1 byte
     data_size = read_i32()
 
