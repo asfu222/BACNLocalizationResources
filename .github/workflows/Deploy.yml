@@ -18,31 +18,53 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          token: ${{ secrets.GITHUB_TOKEN }}
+          
+      - name: Configure Git Identity
+        run: |
+          git config --global user.name "github-actions"
+          git config --global user.email "github-actions@github.com"
+
+      - name: Update Submodule Remotes
+        run: |
+          git submodule foreach '
+            current_url=$(git config --get remote.origin.url);
+            new_url=$(echo "$current_url" | sed "s|https://github.com|https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com|");
+            git remote set-url origin "$new_url";
+          '
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Setup GitHub Pages
         uses: actions/configure-pages@v5
 
       - name: Check and Compress Database Files
         run: |
-          find ./assets -name '*.db' | while read -r file; do
-            gzip -9 "$file"
-            echo "已压缩：$file"
-            rm -f "$file"
-          done
+          find ./assets -name '*.db' -exec gzip -9 {} \; -exec echo "已压缩： {}" \;
 
-      - name: Commit Compressed Database Files
+      - name: Commit and Push Changes in Submodules
+        shell: bash
+        run: |
+          git submodule foreach --recursive bash -c '
+            if [[ -n "$(git status --porcelain)" ]]; then
+              git add .
+              git commit -m "压缩子模块资源 [skip ci]"
+              git push
+            fi
+          '
+
+      - name: Commit Submodule Reference in Parent Repo
         run: |
           if [[ -n "$(git status --porcelain)" ]]; then
-            git config --global user.name "github-actions"
-            git config --global user.email "github-actions@github.com"
             git add .
-            git commit -m "压缩资源 [skip ci]"
+            git commit -m "更新主项目资源 [skip ci]"
             git push
           fi
 
       - name: Decompress Assets
-        run: |
-          find ./assets -name '*.gz' -exec gzip -d "{}" \;
+        run: find ./assets -name '*.gz' -exec gzip -d {} \;
 
       - name: Update Assets
         run: |

@@ -1,0 +1,12 @@
+[submodule "assets/new"]
+	path = assets/new
+	url = https://github.com/asfu222/new.git
+	branch = main
+[submodule "assets/ourplay"]
+	path = assets/ourplay
+	url = https://github.com/asfu222/ourplay.git
+	branch = main
+[submodule "assets/beicheng"]
+	path = assets/beicheng
+	url = https://github.com/asfu222/beicheng.git
+	branch = main

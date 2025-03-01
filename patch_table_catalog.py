@@ -71,12 +71,10 @@ def patch_files(original_catalog_path, files_path, bypass_path = None) -> None:
                     os.makedirs(os.path.join(files_path, "temp"), exist_ok=True)
                     shutil.copy(patched_file, tmp_file)
                     pad_file(tmp_file, size)
-                    subprocess.run(["git", "config", "--global", "user.name", "github-actions"])
-                    subprocess.run(["git", "config", "--global", "user.email", "github-actions@github.com"])
                     subprocess.run(f"gzip -cf -9 {tmp_file} > {patched_file}.gz", shell=True)
-                    subprocess.run(["git", "add", patched_file + ".gz"])
-                    subprocess.run(["git", "commit", "-m", f"修复文件大小： {patched_file} [skip ci]"])
-                    subprocess.run(["git", "push"])
+                    subprocess.run(["git", "-C", str(files_path), "add", patched_file + ".gz"])
+                    subprocess.run(["git", "-C", str(files_path), "commit", "-m", f"修复文件大小： {patched_file} [skip ci]"])
+                    subprocess.run(["git", "-C", str(files_path), "push"])
                     patched_file = tmp_file
                     size = patched_file_size
                 if size == patched_file_size:
