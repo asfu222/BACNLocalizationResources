@@ -72,9 +72,8 @@ def patch_files(original_catalog_path, files_path, bypass_path = None) -> None:
                     shutil.copy(patched_file, tmp_file)
                     pad_file(tmp_file, size)
                     subprocess.run(f"gzip -cf -9 {tmp_file} > {patched_file}.gz", shell=True)
-                    subprocess.run(["git", "-C", str(files_path), "add", patched_file + ".gz"])
+                    subprocess.run(["git", "-C", str(files_path), "add", str(Path(patched_file + ".gz").relative_to(files_path))])
                     subprocess.run(["git", "-C", str(files_path), "commit", "-m", f"修复文件大小： {patched_file} [skip ci]"])
-                    subprocess.run(["git", "-C", str(files_path), "push"])
                     patched_file = tmp_file
                     size = patched_file_size
                 if size == patched_file_size:
