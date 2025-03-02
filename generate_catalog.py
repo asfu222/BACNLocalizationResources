@@ -257,7 +257,7 @@ def generate_html(file_data):
             <div class="dir-item" style="margin-left: {indent}px">
                 <div class="dir-header">
                     <input type="checkbox" class="checkbox dir-checkbox">
-                    <span class="toggle" onclick="toggleDirectory(this)">▶</span>
+                    <span class="toggle" onclick="toggleDirectory(this)">▶&#xFE0E;</span>
                     <span>{dir_name}/</span>
                 </div>
                 <div class="dir-contents" style="display:none;">
@@ -300,7 +300,7 @@ def generate_html(file_data):
         function toggleDirectory(toggle) {{
             const contents = toggle.parentElement.nextElementSibling;
             contents.style.display = contents.style.display === 'none' ? 'block' : 'none';
-            toggle.textContent = contents.style.display === 'none' ? '▶' : '▼';
+            toggle.innerHTML = contents.style.display === 'none' ? '▶&#xFE0E;' : '▼';
         }}
         function getSortedFileIndices(container) {{
             const indices = [];
