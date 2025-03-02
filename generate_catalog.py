@@ -16,6 +16,7 @@ def is_hidden(filepath: Path):
 
 ALLOWED_PATHS = [Path("assets/beicheng"), Path("assets/new"), Path("assets/ourplay"), Path("assets/shale")]
 OUTPUT_FILE = Path("assets/catalog.html")
+STATIC_NAMES = ["bundleDownloadInfo.json", "TableCatalog.bytes", "MediaCatalog.bytes"]
 
 def calculate_hash64(name: str | bytes) -> int:
     if isinstance(name, str):
@@ -36,10 +37,10 @@ def generate_file_list():
                 original_name = file_path.name
                 hash64 = calculate_hash64(original_name)
                 crc = calculate_crc(file_path)
-                new_name = f"{hash64}_{crc}"
+                new_name = f"{hash64}_{crc}" if original_name not in STATIC_NAMES else original_name
                 rel_path = file_path.relative_to("assets").as_posix()
                 file_data.append({
-                    "original": rel_path.replace(".gz", ""),
+                    "original": rel_path,
                     "renamed": new_name,
                     "size": file_path.stat().st_size,
                     "extension": file_path.suffix
@@ -154,6 +155,7 @@ def generate_html(file_data):
             border-radius: 10px;
             overflow: hidden;
             margin: 0 15px;
+            display: none;
         }}
         .file-progress-bar {{
             width: 0%;
@@ -166,6 +168,19 @@ def generate_html(file_data):
             text-align: right;
             color: #6c757d;
             font-size: 0.9em;
+            display: none;
+        }}
+        .file-item.downloading .progress-container,
+        .file-item.downloading .status-text {{
+            display: block;
+        }}
+        .file-item.completed .status-text,
+        .file-item.failed .status-text {{
+            display: inline-block;
+        }}
+        .file-item.completed .progress-container,
+        .file-item.failed .progress-container {{
+            display: none;
         }}
         #bulk-progress {{
             height: 8px;
@@ -382,6 +397,8 @@ def generate_html(file_data):
                 const file = fileData[index];
                 const progressBar = document.getElementById(`file-progress-${{index}}`);
                 const statusText = document.getElementById(`file-status-${{index}}`);
+                const fileItem = document.querySelector(`.file-checkbox[data-index="${{index}}"]`).closest('.file-item');
+                fileItem.classList.add('downloading');
                 await new Promise((resolve) => {{
                     xhr.open('GET', `https://asfu222.github.io/BACNLocalizationResources/${{file.original}}`);
                     xhr.responseType = 'blob';
@@ -395,6 +412,7 @@ def generate_html(file_data):
                         }}
                     }};
                     xhr.onload = () => {{
+                        fileItem.classList.remove('downloading');
                         if (xhr.status === 200) {{
                             const blob = new Blob([xhr.response], {{ type: 'application/octet-stream' }});
                             const link = document.createElement('a');
@@ -410,16 +428,23 @@ def generate_html(file_data):
                             }}
                             link.download = filename;
                             link.click();
-                            statusText.textContent = 'Downloaded';
+                            statusText.textContent = '下载完毕';
+                            fileItem.classList.add('completed');
                             completedFiles++;
+                        }} else {{
+                            statusText.textContent = '下载失败';
+                            fileItem.classList.add('failed');
                         }}
                         activeXHRs.delete(index);
                         updateProgress();
                         resolve();
                     }};
                     xhr.onerror = () => {{
-                        statusText.textContent = 'Failed';
+                        fileItem.classList.remove('downloading');
+                        statusText.textContent = '下载失败';
+                        fileItem.classList.add('failed');
                         activeXHRs.delete(index);
+                        updateProgress();
                         resolve();
                     }};
                     activeXHRs.set(index, xhr);
@@ -431,12 +456,12 @@ def generate_html(file_data):
             isPaused = true;
             activeXHRs.forEach(xhr => xhr.abort());
             activeXHRs.clear();
-            document.getElementById('pauseBtn').textContent = 'Resume';
+            document.getElementById('pauseBtn').textContent = '继续下载';
             document.getElementById('pauseBtn').onclick = resumeDownloads;
         }}
         function resumeDownloads() {{
             isPaused = false;
-            document.getElementById('pauseBtn').textContent = 'Pause';
+            document.getElementById('pauseBtn').textContent = '暂停下载';
             document.getElementById('pauseBtn').onclick = pauseDownloads;
             startDownloads();
         }}
@@ -451,6 +476,9 @@ def generate_html(file_data):
             completedFiles = 0;
             document.querySelectorAll('.file-progress-bar').forEach(bar => bar.style.width = '0%');
             document.querySelectorAll('.status-text').forEach(span => span.textContent = '');
+            document.querySelectorAll('.file-item').forEach(item => {{
+                item.classList.remove('downloading', 'completed', 'failed');
+            }});
             document.getElementById('total-progress').style.width = '0%';
             updateProgress();
             document.querySelectorAll('.file-checkbox, .dir-checkbox').forEach(cb => cb.checked = false);
