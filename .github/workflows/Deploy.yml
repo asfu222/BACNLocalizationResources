@@ -67,8 +67,12 @@ jobs:
           for submodule in $submodule_paths; do
             git add $submodule
           done
-          git commit -m "更新子模块指针 [skip ci]"
-          git push --recurse-submodules=on-demand origin HEAD
+          if git diff --cached --quiet; then
+            echo "子模块已是最新状态"
+          else
+            git commit -m "更新子模块指针 [skip ci]"
+            git push --recurse-submodules=on-demand origin HEAD
+          fi
 
       - name: Cleanup
         run: find . -type d -name "temp" -exec rm -rf {} +
