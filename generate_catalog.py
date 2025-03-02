@@ -265,7 +265,7 @@ def generate_html(file_data):
                 </div>
             </div>
             """
-        for file in sorted(node["files"], key=lambda x: x['name']):
+        for file in sorted(node["files"], key=lambda x: (x['name'] not in STATIC_NAMES, x['name'])):
             html += f"""
             <div class="file-item">
                 <input type="checkbox" class="checkbox file-checkbox" data-index="{file['index']}">
