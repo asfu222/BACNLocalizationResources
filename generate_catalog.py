@@ -230,75 +230,58 @@ def generate_html(file_data):
         /* 移动端适配 */
         @media (max-width: 1024px) {{
             /* General mobile/tablet adjustments */
+            :root {{
+                --header-height: 60px;
+                --controls-height: 90px;
+            }}
+            
             body {{ 
-                padding-top: 160px;
-                margin: 15px;
+                padding-top: calc(var(--header-height) + var(--controls-height) + 20px);
+                margin: 10px;
+                font-size: 14px; /* Base font reduction */
             }}
             
             h1 {{
-                padding: 12px 15px;
-                font-size: 1.2rem;
+                height: var(--header-height);
+                padding: 10px 15px;
+                font-size: 1rem; /* Reduced from 1.2rem */
+                line-height: 1.2;
             }}
 
             .controls {{
-                top: 80px;
-                left: 15px;
-                right: 15px;
-                padding: 15px;
+                font-size: 0.9rem; /* Controls text reduction */
             }}
 
+            /* Tablet-specific adjustments */
             @media (min-width: 768px) and (max-width: 1024px) {{
-                .tree {{
-                    margin-left: 15px;
-                    padding: 25px;
-                }}
-                
-                button {{
-                    padding: 12px 18px;
-                    font-size: 1rem;
+                h1 {{
+                    font-size: 1.1rem;
                 }}
             }}
 
+            /* Phone-specific adjustments */
             @media (max-width: 767px) {{
                 body {{ 
-                    padding-top: 180px;
-                    margin: 10px;
+                    font-size: 13px; /* Further reduce base size */
+                    padding-top: calc(var(--header-height) + var(--controls-height) + 10px);
                 }}
                 
-                .tree {{
-                    margin-left: 10px;
-                    margin-top: 15px;
-                    padding: 15px;
+                h1 {{
+                    font-size: 0.9rem; /* Smaller mobile heading */
+                    padding: 8px 12px;
                 }}
-                
-                .file-item {{
-                    flex-wrap: wrap;
-                    margin-left: 15px;
-                    gap: 8px;
+
+                .controls {{
+                    font-size: 0.8rem; /* Smaller control text */
                 }}
-                
-                .progress-container {{
-                    max-width: 100%;
-                    margin: 8px 0;
-                    order: 2;
-                }}
-                
-                .status-text {{
-                    order: 3;
-                    min-width: auto;
-                    flex: 1 1 100%;
-                    text-align: left;
-                }}
-                
+
                 button {{
-                    padding: 10px 12px;
-                    font-size: 0.9rem;
-                    flex: 1 1 100%;
+                    font-size: 0.8rem !important; /* Smaller button text */
+                    padding: 8px 10px !important;
                 }}
-                
-                .checkbox {{
-                    transform: scale(1.2);
-                    margin: 0 8px 0 4px;
+
+                label {{
+                    line-height: 1.3; /* Tighter line spacing */
                 }}
             }}
         }}
