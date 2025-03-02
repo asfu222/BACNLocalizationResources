@@ -226,6 +226,59 @@ def generate_html(file_data):
         .icon:hover {{
             opacity: 0.7;
         }}
+
+        /* 移动端适配 */
+        @media (max-width: 768px) {{
+            body {{ 
+                padding-top: 160px;
+                margin: 10px;
+            }}
+            h1 {{
+                padding: 12px 10px;
+                font-size: 1.1rem;
+            }}
+            .controls {{
+                top: 70px;
+                left: 10px;
+                right: 10px;
+                padding: 12px;
+            }}
+            .tree {{
+                margin-left: 10px;
+                margin-top: 15px;
+                padding: 15px;
+            }}
+            .file-item {{
+                flex-wrap: wrap;
+                margin-left: 15px;
+                gap: 8px;
+            }}
+            .file-item > span {{
+                flex: 1 1 100%;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+            }}
+            .progress-container {{
+                max-width: 100%;
+                margin: 8px 0;
+                order: 2;
+            }}
+            .status-text {{
+                order: 3;
+                min-width: auto;
+                flex: 1 1 100%;
+                text-align: left;
+            }}
+            button {{
+                padding: 10px 12px;
+                font-size: 0.9rem;
+            }}
+            .checkbox {{
+                transform: scale(1.2);
+                margin: 0 8px 0 4px;
+            }}
+        }}
     </style>
 </head>
 <body>
