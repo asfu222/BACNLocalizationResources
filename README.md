@@ -12,3 +12,5 @@
 ## 可选项
 - 如果日服原文件大小值一样，`latest_crcbypass`内生成了可直接替换本有文件的资源。
     - 目前只有作者做的新汉化支持
+
+## [汉化安装工具（适配iOS和安卓）](https://github.com/asfu222/BAJP2CNPatch)

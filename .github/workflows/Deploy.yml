@@ -75,9 +75,6 @@ jobs:
             git push --recurse-submodules=on-demand origin HEAD
           fi
 
-      - name: Cleanup
-        run: find . -type d -name "temp" -exec rm -rf {} +
-
       - name: Upload Artifact to GitHub Pages
         uses: actions/upload-pages-artifact@v3
         with:
