@@ -228,55 +228,78 @@ def generate_html(file_data):
         }}
 
         /* 移动端适配 */
-        @media (max-width: 768px) {{
+        @media (max-width: 1024px) {{
+            /* General mobile/tablet adjustments */
             body {{ 
                 padding-top: 160px;
-                margin: 10px;
+                margin: 15px;
             }}
+            
             h1 {{
-                padding: 12px 10px;
-                font-size: 1.1rem;
+                padding: 12px 15px;
+                font-size: 1.2rem;
             }}
+
             .controls {{
-                top: 70px;
-                left: 10px;
-                right: 10px;
-                padding: 12px;
-            }}
-            .tree {{
-                margin-left: 10px;
-                margin-top: 15px;
+                top: 80px;
+                left: 15px;
+                right: 15px;
                 padding: 15px;
             }}
-            .file-item {{
-                flex-wrap: wrap;
-                margin-left: 15px;
-                gap: 8px;
+
+            @media (min-width: 768px) and (max-width: 1024px) {{
+                .tree {{
+                    margin-left: 15px;
+                    padding: 25px;
+                }}
+                
+                button {{
+                    padding: 12px 18px;
+                    font-size: 1rem;
+                }}
             }}
-            .file-item > span {{
-                flex: 1 1 100%;
-                overflow: hidden;
-                text-overflow: ellipsis;
-                white-space: nowrap;
-            }}
-            .progress-container {{
-                max-width: 100%;
-                margin: 8px 0;
-                order: 2;
-            }}
-            .status-text {{
-                order: 3;
-                min-width: auto;
-                flex: 1 1 100%;
-                text-align: left;
-            }}
-            button {{
-                padding: 10px 12px;
-                font-size: 0.9rem;
-            }}
-            .checkbox {{
-                transform: scale(1.2);
-                margin: 0 8px 0 4px;
+
+            @media (max-width: 767px) {{
+                body {{ 
+                    padding-top: 180px;
+                    margin: 10px;
+                }}
+                
+                .tree {{
+                    margin-left: 10px;
+                    margin-top: 15px;
+                    padding: 15px;
+                }}
+                
+                .file-item {{
+                    flex-wrap: wrap;
+                    margin-left: 15px;
+                    gap: 8px;
+                }}
+                
+                .progress-container {{
+                    max-width: 100%;
+                    margin: 8px 0;
+                    order: 2;
+                }}
+                
+                .status-text {{
+                    order: 3;
+                    min-width: auto;
+                    flex: 1 1 100%;
+                    text-align: left;
+                }}
+                
+                button {{
+                    padding: 10px 12px;
+                    font-size: 0.9rem;
+                    flex: 1 1 100%;
+                }}
+                
+                .checkbox {{
+                    transform: scale(1.2);
+                    margin: 0 8px 0 4px;
+                }}
             }}
         }}
     </style>
