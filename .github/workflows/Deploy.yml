@@ -3,9 +3,10 @@ name: Deploy to GitHub Pages
 on:
   workflow_dispatch:
   push:
-  schedule:
-    - cron: '0 * * * *' # 每小时
-
+  workflow_run:
+    workflows: ["Update Yostar Server URL"]
+    types:
+      - completed
 permissions:
   contents: write
   pages: write
