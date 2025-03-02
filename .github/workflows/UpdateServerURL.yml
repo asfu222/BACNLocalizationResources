@@ -1,0 +1,39 @@
+name: Update Server URL
+
+on:
+  schedule:
+    - cron: "0 9,10,15 * * *"
+  workflow_dispatch:
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          submodules: false
+
+      - name: Clone BlueArchiveLocalizationTools repository
+        run: |
+          git clone https://github.com/asfu222/BlueArchiveLocalizationTools.git
+
+      - name: Set up Python 3.x
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Install requirements from requirements.txt
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r BlueArchiveLocalizationTools/requirements.txt
+
+      - name: Run update_urls.py with ba.env
+        run: |
+          python BlueArchiveLocalizationTools/update_urls.py ba.env
+
+      - name: Commit and push changes if ba.env was modified
+        run: |
+          git add ba.env
+          git diff --quiet || (git commit -m "更新悠星服务器URL" && git push)
