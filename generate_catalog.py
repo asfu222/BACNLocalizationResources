@@ -73,6 +73,7 @@ def generate_html(file_data):
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>蔚蓝档案日服汉化文件资源库</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.0/jszip.min.js"></script>
     <style>
         body {{ 
             font-family: Arial, sans-serif; 
@@ -226,65 +227,106 @@ def generate_html(file_data):
         .icon:hover {{
             opacity: 0.7;
         }}
-
+        
         /* 移动端适配 */
+        .controls > div {{
+            flex: 1;
+            min-width: 0;
+            overflow: hidden;
+            text-align: right;
+        }}
         @media (max-width: 1024px) {{
-            /* General mobile/tablet adjustments */
             :root {{
-                --header-height: 60px;
-                --controls-height: 90px;
+                --header-height: 55px;
+                --controls-height: 100px;
             }}
-            
             body {{ 
-                padding-top: calc(var(--header-height) + var(--controls-height) + 20px);
-                margin: 10px;
-                font-size: 14px; /* Base font reduction */
+                padding-top: calc(var(--header-height) + var(--controls-height) + 30px);
+                margin: 8px;
+                font-size: 14px;
             }}
-            
             h1 {{
                 height: var(--header-height);
-                padding: 10px 15px;
-                font-size: 1rem; /* Reduced from 1.2rem */
+                padding: 8px 12px;
+                font-size: 1rem;
                 line-height: 1.2;
             }}
-
             .controls {{
-                font-size: 0.9rem; /* Controls text reduction */
+                font-size: 0.85rem;
+                display: flex;
+                flex-wrap: nowrap;
+                align-items: center;
             }}
-
-            /* Tablet-specific adjustments */
+            .controls > div {{
+                flex: 1;
+                min-width: 0;
+                overflow: hidden;
+                text-align: right;
+            }}
             @media (min-width: 768px) and (max-width: 1024px) {{
                 h1 {{
                     font-size: 1.1rem;
                 }}
             }}
-
-            /* Phone-specific adjustments */
-            @media (max-width: 767px) {{
-                body {{ 
-                    font-size: 13px; /* Further reduce base size */
-                    padding-top: calc(var(--header-height) + var(--controls-height) + 10px);
-                }}
-                
-                h1 {{
-                    font-size: 0.9rem; /* Smaller mobile heading */
-                    padding: 8px 12px;
-                }}
-
-                .controls {{
-                    font-size: 0.8rem; /* Smaller control text */
-                }}
-
-                button {{
-                    font-size: 0.8rem !important; /* Smaller button text */
-                    padding: 8px 10px !important;
-                }}
-
-                label {{
-                    line-height: 1.3; /* Tighter line spacing */
-                }}
+        @media (max-width: 767px) {{
+            :root {{
+                --header-height: 50px;
+                --controls-height: 90px;
+            }}
+            body {{
+                font-size: 12px;
+                padding-top: calc(var(--header-height) + var(--controls-height) + 30px);
+            }}
+            h1 {{
+                font-size: 0.85rem;
+                padding: 6px 10px;
+            }}
+            .controls {{
+                font-size: 0.75rem;
+                flex-wrap: wrap;
+                justify-content: center;
+                gap: 3px;
+                padding: 5px;
+            }}
+            .controls > div {{
+                flex: 1 1 100%;
+                text-align: center;
+                margin-top: 3px;
+            }}
+            #progress-text {{
+                font-size: 0.7rem;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                text-align: center;
+                margin-top: 20px;
+                padding: 0 10px;
+                visibility: visible;
+                display: inline-block;
+                width: 100%;
+            }}
+            button {{
+                flex: 1 1 auto;
+                min-width: 55px;
+                font-size: 0.7rem !important;
+                padding: 5px 7px !important;
+            }}
+            label {{
+                line-height: 1.2;
+            }}
+            .downloads {{
+                position: relative;
+                z-index: 10;
+                margin-top: 5px;
+                width: 100%;
+                text-align: center;
             }}
         }}
+
+        }}
+
+
+
     </style>
 </head>
 <body>
@@ -294,6 +336,10 @@ def generate_html(file_data):
             <label style="display: flex; align-items: center; gap: 5px;">
                 <input type="checkbox" id="renameToggle" checked>
                 使用游戏可用命名（替换文件党请勾选）
+            </label>
+            <label style="display: flex; align-items: center; gap: 5px;">
+                <input type="checkbox" id="compressToggle" checked>
+                合并压缩成 artifacts.zip
             </label>
             <button onclick="startDownloads()" id="startBtn">开始下载</button>
             <button onclick="pauseDownloads()" id="pauseBtn">暂停下载</button>
@@ -357,13 +403,12 @@ def generate_html(file_data):
         let totalSize = 0;
         let downloadedSize = 0;
         let currentQueueIndex = 0;
-
+        let downloadedFiles = [];
         function toggleDirectory(toggle) {{
             const contents = toggle.parentElement.nextElementSibling;
             contents.style.display = contents.style.display === 'none' ? 'block' : 'none';
             toggle.innerHTML = contents.style.display === 'none' ? '▶&#xFE0E;' : '▼';
         }}
-
         function getSortedFileIndices(container) {{
             const indices = [];
             const walker = document.createTreeWalker(
@@ -380,18 +425,17 @@ def generate_html(file_data):
             }}
             return indices;
         }}
-
         function resetProgress() {{
             activeXHRs.forEach(xhr => xhr.abort());
             activeXHRs.clear();
             downloadedSize = 0;
             completedFiles = 0;
+            downloadedFiles = [];
             document.querySelectorAll('.file-progress-bar').forEach(bar => bar.style.width = '0%');
             document.querySelectorAll('.status-text').forEach(span => span.textContent = '');
             document.getElementById('total-progress').style.width = '0%';
             updateProgress();
         }}
-
         function updateProgress() {{
             const totalMB = (totalSize / 1024 / 1024).toFixed(1);
             const downloadedMB = (downloadedSize / 1024 / 1024).toFixed(1);
@@ -400,7 +444,6 @@ def generate_html(file_data):
             document.getElementById('progress-text').textContent = 
                 `${{completedFiles}}/${{totalFiles}} 文件 (${{downloadedMB}}MB/${{totalMB}}MB)`;
         }}
-
         function handleDirectorySelection(checkbox) {{
             const container = checkbox.closest('.dir-item').querySelector('.dir-contents');
             const indices = getSortedFileIndices(container);
@@ -430,7 +473,6 @@ def generate_html(file_data):
             resetProgress();
             document.getElementById('startBtn').disabled = totalFiles === 0;
         }}
-
         document.addEventListener('change', (event) => {{
             if (event.target.classList.contains('dir-checkbox')) {{
                 handleDirectorySelection(event.target);
@@ -451,7 +493,18 @@ def generate_html(file_data):
                 document.getElementById('startBtn').disabled = totalFiles === 0;
             }}
         }});
-
+        async function compressAndDownload() {{
+            const zip = new JSZip();
+            downloadedFiles.forEach(file => {{
+                zip.file(file.filename, file.blob);
+            }});
+            const content = await zip.generateAsync({{type:"blob"}});
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(content);
+            link.download = "artifacts.zip";
+            link.click();
+            downloadedFiles = [];
+        }}
         async function startDownloads() {{
             isPaused = false;
             if (currentQueueIndex === 0) {{
@@ -485,8 +538,6 @@ def generate_html(file_data):
                         fileItem.classList.remove('downloading');
                         if (xhr.status === 200) {{
                             const blob = new Blob([xhr.response], {{ type: 'application/octet-stream' }});
-                            const link = document.createElement('a');
-                            link.href = URL.createObjectURL(blob);
                             let filename;
                             if (document.getElementById('renameToggle').checked) {{
                                 filename = file.renamed;
@@ -496,8 +547,14 @@ def generate_html(file_data):
                                     ? originalName 
                                     : `${{originalName}}${{file.extension}}`;
                             }}
-                            link.download = filename;
-                            link.click();
+                            if (document.getElementById('compressToggle').checked) {{
+                                downloadedFiles.push({{filename: filename, blob: blob}});
+                            }} else {{
+                                const link = document.createElement('a');
+                                link.href = URL.createObjectURL(blob);
+                                link.download = filename;
+                                link.click();
+                            }}
                             statusText.textContent = '下载完毕';
                             fileItem.classList.add('completed');
                             completedFiles++;
@@ -525,10 +582,12 @@ def generate_html(file_data):
                 }});
             }}
             if (!isPaused && currentQueueIndex === downloadQueue.length) {{
+                if (document.getElementById('compressToggle').checked) {{
+                    compressAndDownload();
+                }}
                 currentQueueIndex = 0;
             }}
         }}
-
         function pauseDownloads() {{
             isPaused = true;
             activeXHRs.forEach(xhr => xhr.abort());
@@ -536,14 +595,12 @@ def generate_html(file_data):
             document.getElementById('pauseBtn').textContent = '继续下载';
             document.getElementById('pauseBtn').onclick = resumeDownloads;
         }}
-
         function resumeDownloads() {{
             isPaused = false;
             document.getElementById('pauseBtn').textContent = '暂停下载';
             document.getElementById('pauseBtn').onclick = pauseDownloads;
             startDownloads();
         }}
-
         function cancelDownloads() {{
             isPaused = true;
             activeXHRs.forEach(xhr => xhr.abort());
@@ -554,6 +611,7 @@ def generate_html(file_data):
             downloadedSize = 0;
             completedFiles = 0;
             currentQueueIndex = 0;
+            downloadedFiles = [];
             document.querySelectorAll('.file-progress-bar').forEach(bar => bar.style.width = '0%');
             document.querySelectorAll('.status-text').forEach(span => span.textContent = '');
             document.querySelectorAll('.file-item').forEach(item => {{
