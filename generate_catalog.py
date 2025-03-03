@@ -356,11 +356,14 @@ def generate_html(file_data):
         let completedFiles = 0;
         let totalSize = 0;
         let downloadedSize = 0;
+        let currentQueueIndex = 0;
+
         function toggleDirectory(toggle) {{
             const contents = toggle.parentElement.nextElementSibling;
             contents.style.display = contents.style.display === 'none' ? 'block' : 'none';
             toggle.innerHTML = contents.style.display === 'none' ? '▶&#xFE0E;' : '▼';
         }}
+
         function getSortedFileIndices(container) {{
             const indices = [];
             const walker = document.createTreeWalker(
@@ -377,6 +380,7 @@ def generate_html(file_data):
             }}
             return indices;
         }}
+
         function resetProgress() {{
             activeXHRs.forEach(xhr => xhr.abort());
             activeXHRs.clear();
@@ -387,6 +391,7 @@ def generate_html(file_data):
             document.getElementById('total-progress').style.width = '0%';
             updateProgress();
         }}
+
         function updateProgress() {{
             const totalMB = (totalSize / 1024 / 1024).toFixed(1);
             const downloadedMB = (downloadedSize / 1024 / 1024).toFixed(1);
@@ -395,6 +400,7 @@ def generate_html(file_data):
             document.getElementById('progress-text').textContent = 
                 `${{completedFiles}}/${{totalFiles}} 文件 (${{downloadedMB}}MB/${{totalMB}}MB)`;
         }}
+
         function handleDirectorySelection(checkbox) {{
             const container = checkbox.closest('.dir-item').querySelector('.dir-contents');
             const indices = getSortedFileIndices(container);
@@ -424,6 +430,7 @@ def generate_html(file_data):
             resetProgress();
             document.getElementById('startBtn').disabled = totalFiles === 0;
         }}
+
         document.addEventListener('change', (event) => {{
             if (event.target.classList.contains('dir-checkbox')) {{
                 handleDirectorySelection(event.target);
@@ -444,12 +451,16 @@ def generate_html(file_data):
                 document.getElementById('startBtn').disabled = totalFiles === 0;
             }}
         }});
+
         async function startDownloads() {{
             isPaused = false;
-            downloadedSize = 0;
-            completedFiles = 0;
+            if (currentQueueIndex === 0) {{
+                downloadedSize = 0;
+                completedFiles = 0;
+            }}
             updateProgress();
-            for (const index of downloadQueue) {{
+            const queueToProcess = downloadQueue.slice(currentQueueIndex);
+            for (const index of queueToProcess) {{
                 if (isPaused) break;
                 if (activeXHRs.has(index)) continue;
                 const xhr = new XMLHttpRequest();
@@ -490,9 +501,11 @@ def generate_html(file_data):
                             statusText.textContent = '下载完毕';
                             fileItem.classList.add('completed');
                             completedFiles++;
+                            currentQueueIndex++;
                         }} else {{
                             statusText.textContent = '下载失败';
                             fileItem.classList.add('failed');
+                            currentQueueIndex++;
                         }}
                         activeXHRs.delete(index);
                         updateProgress();
@@ -503,6 +516,7 @@ def generate_html(file_data):
                         statusText.textContent = '下载失败';
                         fileItem.classList.add('failed');
                         activeXHRs.delete(index);
+                        currentQueueIndex++;
                         updateProgress();
                         resolve();
                     }};
@@ -510,7 +524,11 @@ def generate_html(file_data):
                     xhr.send();
                 }});
             }}
+            if (!isPaused && currentQueueIndex === downloadQueue.length) {{
+                currentQueueIndex = 0;
+            }}
         }}
+
         function pauseDownloads() {{
             isPaused = true;
             activeXHRs.forEach(xhr => xhr.abort());
@@ -518,12 +536,14 @@ def generate_html(file_data):
             document.getElementById('pauseBtn').textContent = '继续下载';
             document.getElementById('pauseBtn').onclick = resumeDownloads;
         }}
+
         function resumeDownloads() {{
             isPaused = false;
             document.getElementById('pauseBtn').textContent = '暂停下载';
             document.getElementById('pauseBtn').onclick = pauseDownloads;
             startDownloads();
         }}
+
         function cancelDownloads() {{
             isPaused = true;
             activeXHRs.forEach(xhr => xhr.abort());
@@ -533,6 +553,7 @@ def generate_html(file_data):
             totalSize = 0;
             downloadedSize = 0;
             completedFiles = 0;
+            currentQueueIndex = 0;
             document.querySelectorAll('.file-progress-bar').forEach(bar => bar.style.width = '0%');
             document.querySelectorAll('.status-text').forEach(span => span.textContent = '');
             document.querySelectorAll('.file-item').forEach(item => {{
