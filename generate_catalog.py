@@ -37,7 +37,7 @@ def generate_file_list():
                 original_name = file_path.name
                 hash64 = calculate_hash64(original_name)
                 crc = calculate_crc(file_path)
-                new_name = f"{hash64}_{crc}" if original_name not in STATIC_NAMES else original_name
+                new_name = f"{hash64}_{crc}" if original_name not in STATIC_NAMES and not original_name.endswith(".bundle") else original_name
                 rel_path = file_path.relative_to("assets").as_posix()
                 file_data.append({
                     "original": rel_path,
