@@ -66,7 +66,7 @@ def patch_files(original_catalog_path, files_path, bypass_path = None) -> None:
             print(f"TableCatalog.bytes: 修改{key} 文件大小值 {size} -> {patched_file_size}")
             print(f"TableCatalog.bytes: 修改{key} crc值 {crc} -> {calculate_crc32(patched_file)}")
             if bypass_path is not None:
-                if size > patched_file_size and key.endswith(".db"):
+                if size > patched_file_size and key.endswith(".db") or key.endswith(".zip"):
                     tmp_file = os.path.join(files_path, "temp", key)
                     os.makedirs(os.path.join(files_path, "temp"), exist_ok=True)
                     shutil.copy(patched_file, tmp_file)
