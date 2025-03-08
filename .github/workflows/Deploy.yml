@@ -3,10 +3,8 @@ name: Deploy to GitHub Pages
 on:
   workflow_dispatch:
   push:
-  workflow_run:
-    workflows: ["Update Yostar Server URL"]
-    types:
-      - completed
+  repository_dispatch:
+    types: [run-deployment]
 permissions:
   contents: write
   pages: write
@@ -74,11 +72,38 @@ jobs:
             git commit -m "更新子模块指针 [skip ci]"
             git push --recurse-submodules=on-demand origin HEAD
           fi
-
+          
+      - name: Check if should deploy
+        id: check_deploy
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "Manual trigger – proceeding with deployment."
+            echo "::set-output name=should_deploy::true"
+            exit 0
+          fi
+          git fetch origin gh-pages || true
+          if git show-ref --verify --quiet refs/remotes/origin/gh-pages; then
+            LAST_DEPLOYED=$(git show origin/gh-pages:.last_deployed_commit 2>/dev/null || echo "")
+          else
+            LAST_DEPLOYED=""
+          fi
+          CURRENT=$(git rev-parse HEAD)
+          echo "Current commit: $CURRENT"
+          echo "Last deployed commit: $LAST_DEPLOYED"
+          if [ "$CURRENT" = "$LAST_DEPLOYED" ]; then
+            echo "No new commit detected. Skipping deployment."
+            echo "::set-output name=should_deploy::false"
+          else
+            echo "New commit detected. Proceeding with deployment."
+            echo "::set-output name=should_deploy::true"
+          fi
+          
       - name: Upload Artifact to GitHub Pages
         uses: actions/upload-pages-artifact@v3
+        if: ${{ steps.check_deploy.outputs.should_deploy == 'true' }}
         with:
           path: './assets'
 
       - name: Deploy to GitHub Pages
         uses: actions/deploy-pages@v4
+        if: ${{ steps.check_deploy.outputs.should_deploy == 'true' }}
