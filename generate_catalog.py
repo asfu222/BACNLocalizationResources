@@ -523,8 +523,8 @@ def generate_html(file_data):
                 const fileItem = document.querySelector(`.file-checkbox[data-index="${{index}}"]`).closest('.file-item');
                 fileItem.classList.add('downloading');
                 await new Promise((resolve) => {{
-                    const rootUrl = `${window.location.origin}${window.location.pathname.split('/').slice(0, -1).join('/')}/`;
-                    xhr.open('GET', `${rootUrl}${file.original}`);
+                    const rootUrl = `${{window.location.origin}}${{window.location.pathname.split('/').slice(0, -1).join('/')}}/`;
+                    xhr.open('GET', `${{rootUrl}}${{file.original}}`);
                     xhr.responseType = 'blob';
                     xhr.onprogress = (event) => {{
                         if (event.lengthComputable) {{
