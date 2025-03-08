@@ -407,13 +407,16 @@ def generate_html(file_data):
         let completedFiles = 0;
         let totalSize = 0;
         let downloadedSize = 0;
-        let currentQueueIndex = 0;
         let downloadedFiles = [];
+        const CONCURRENCY_LIMIT = 10;
+        let currentIndex = 0;
+
         function toggleDirectory(toggle) {{
             const contents = toggle.parentElement.nextElementSibling;
             contents.style.display = contents.style.display === 'none' ? 'block' : 'none';
             toggle.innerHTML = contents.style.display === 'none' ? '▶&#xFE0E;' : '▼';
         }}
+
         function getSortedFileIndices(container) {{
             const indices = [];
             const walker = document.createTreeWalker(
@@ -430,17 +433,20 @@ def generate_html(file_data):
             }}
             return indices;
         }}
+
         function resetProgress() {{
             activeXHRs.forEach(xhr => xhr.abort());
             activeXHRs.clear();
             downloadedSize = 0;
             completedFiles = 0;
             downloadedFiles = [];
+            currentIndex = 0;
             document.querySelectorAll('.file-progress-bar').forEach(bar => bar.style.width = '0%');
             document.querySelectorAll('.status-text').forEach(span => span.textContent = '');
             document.getElementById('total-progress').style.width = '0%';
             updateProgress();
         }}
+
         function updateProgress() {{
             const totalMB = (totalSize / 1024 / 1024).toFixed(1);
             const downloadedMB = (downloadedSize / 1024 / 1024).toFixed(1);
@@ -449,6 +455,7 @@ def generate_html(file_data):
             document.getElementById('progress-text').textContent = 
                 `${{completedFiles}}/${{totalFiles}} 文件 (${{downloadedMB}}MB/${{totalMB}}MB)`;
         }}
+
         function handleDirectorySelection(checkbox) {{
             const container = checkbox.closest('.dir-item').querySelector('.dir-contents');
             const indices = getSortedFileIndices(container);
@@ -478,6 +485,7 @@ def generate_html(file_data):
             resetProgress();
             document.getElementById('startBtn').disabled = totalFiles === 0;
         }}
+
         document.addEventListener('change', (event) => {{
             if (event.target.classList.contains('dir-checkbox')) {{
                 handleDirectorySelection(event.target);
@@ -498,107 +506,110 @@ def generate_html(file_data):
                 document.getElementById('startBtn').disabled = totalFiles === 0;
             }}
         }});
-        
-        async function compressAndDownload() {{
-            const files = downloadedFiles.map(file => ({{
-                name: file.filename,
-                input: file.blob
-            }}));
-            
-            const blob = await window.downloadZip(files).blob();
-            
-            const link = document.createElement("a");
-            link.href = URL.createObjectURL(blob);
-            link.download = "artifacts.zip";
-            link.click();
-            
-            downloadedFiles = [];
-        }}
 
-        async function startDownloads() {{
-            isPaused = false;
-            if (currentQueueIndex === 0) {{
-                downloadedSize = 0;
-                completedFiles = 0;
-            }}
-            updateProgress();
-            const queueToProcess = downloadQueue.slice(currentQueueIndex);
-            for (const index of queueToProcess) {{
-                if (isPaused) break;
-                if (activeXHRs.has(index)) continue;
+        async function processFile(index) {{
+            return new Promise((resolve) => {{
                 const xhr = new XMLHttpRequest();
                 const file = fileData[index];
                 const progressBar = document.getElementById(`file-progress-${{index}}`);
                 const statusText = document.getElementById(`file-status-${{index}}`);
                 const fileItem = document.querySelector(`.file-checkbox[data-index="${{index}}"]`).closest('.file-item');
+                
                 fileItem.classList.add('downloading');
-                await new Promise((resolve) => {{
-                    const rootUrl = `${{window.location.origin}}${{window.location.pathname.split('/').slice(0, -1).join('/')}}/`;
-                    xhr.open('GET', `${{rootUrl}}${{file.original}}`);
-                    xhr.responseType = 'blob';
-                    xhr.onprogress = (event) => {{
-                        if (event.lengthComputable) {{
-                            const percent = (event.loaded / event.total) * 100;
-                            progressBar.style.width = `${{percent}}%`;
-                            downloadedSize += event.loaded - (xhr._lastLoaded || 0);
-                            xhr._lastLoaded = event.loaded;
-                            updateProgress();
-                        }}
-                    }};
-                    xhr.onload = () => {{
-                        fileItem.classList.remove('downloading');
-                        if (xhr.status === 200) {{
-                            const blob = new Blob([xhr.response], {{ type: 'application/octet-stream' }});
-                            let filename;
-                            if (document.getElementById('renameToggle').checked) {{
-                                filename = file.renamed;
-                            }} else {{
-                                const originalName = file.original.split('/').pop();
-                                filename = originalName.includes('.') 
-                                    ? originalName 
-                                    : `${{originalName}}${{file.extension}}`;
-                            }}
-                            if (document.getElementById('compressToggle').checked) {{
-                                downloadedFiles.push({{filename: filename, blob: blob}});
-                            }} else {{
-                                const link = document.createElement('a');
-                                link.href = URL.createObjectURL(blob);
-                                link.download = filename;
-                                link.click();
-                            }}
-                            statusText.textContent = '下载完毕';
-                            fileItem.classList.add('completed');
-                            completedFiles++;
-                            currentQueueIndex++;
-                        }} else {{
-                            statusText.textContent = '下载失败';
-                            fileItem.classList.add('failed');
-                            currentQueueIndex++;
-                        }}
-                        activeXHRs.delete(index);
+                activeXHRs.set(index, xhr);
+
+                const rootUrl = `${{window.location.origin}}${{window.location.pathname.split('/').slice(0, -1).join('/')}}/`;
+                xhr.open('GET', `${{rootUrl}}${{file.original}}`);
+                xhr.responseType = 'blob';
+
+                xhr.onprogress = (event) => {{
+                    if (event.lengthComputable) {{
+                        const percent = (event.loaded / event.total) * 100;
+                        progressBar.style.width = `${{percent}}%`;
+                        downloadedSize += event.loaded - (xhr._lastLoaded || 0);
+                        xhr._lastLoaded = event.loaded;
                         updateProgress();
-                        resolve();
-                    }};
-                    xhr.onerror = () => {{
-                        fileItem.classList.remove('downloading');
+                    }}
+                }};
+
+                xhr.onload = () => {{
+                    fileItem.classList.remove('downloading');
+                    if (xhr.status === 200) {{
+                        const blob = new Blob([xhr.response], {{ type: 'application/octet-stream' }});
+                        let filename;
+                        if (document.getElementById('renameToggle').checked) {{
+                            filename = file.renamed;
+                        }} else {{
+                            const originalName = file.original.split('/').pop();
+                            filename = originalName.includes('.') 
+                                ? originalName 
+                                : `${{originalName}}${{file.extension}}`;
+                        }}
+                        if (document.getElementById('compressToggle').checked) {{
+                            downloadedFiles.push({{filename: filename, blob: blob}});
+                        }} else {{
+                            const link = document.createElement('a');
+                            link.href = URL.createObjectURL(blob);
+                            link.download = filename;
+                            link.click();
+                        }}
+                        statusText.textContent = '下载完毕';
+                        fileItem.classList.add('completed');
+                    }} else {{
                         statusText.textContent = '下载失败';
                         fileItem.classList.add('failed');
-                        activeXHRs.delete(index);
-                        currentQueueIndex++;
-                        updateProgress();
-                        resolve();
-                    }};
-                    activeXHRs.set(index, xhr);
-                    xhr.send();
-                }});
-            }}
-            if (!isPaused && currentQueueIndex === downloadQueue.length) {{
-                if (document.getElementById('compressToggle').checked) {{
-                    compressAndDownload();
+                    }}
+                    completedFiles++;
+                    activeXHRs.delete(index);
+                    resolve();
+                }};
+
+                xhr.onerror = () => {{
+                    fileItem.classList.remove('downloading');
+                    statusText.textContent = '下载失败';
+                    fileItem.classList.add('failed');
+                    completedFiles++;
+                    activeXHRs.delete(index);
+                    resolve();
+                }};
+
+                xhr.send();
+            }});
+        }}
+
+        async function startDownloads() {{
+            isPaused = false;
+            const queue = downloadQueue;
+            currentIndex = 0;
+            completedFiles = 0;
+            downloadedSize = 0;
+            
+            const workers = Array(CONCURRENCY_LIMIT).fill().map(async () => {{
+                while (currentIndex < queue.length && !isPaused) {{
+                    const index = queue[currentIndex];
+                    currentIndex++;
+                    await processFile(index);
                 }}
-                currentQueueIndex = 0;
+            }});
+            
+            await Promise.all(workers);
+            
+            if (!isPaused && completedFiles === totalFiles) {{
+                if (document.getElementById('compressToggle').checked) {{
+                    const files = downloadedFiles.map(file => ({{
+                        name: file.filename,
+                        input: file.blob
+                    }}));
+                    const blob = await window.downloadZip(files).blob();
+                    const link = document.createElement("a");
+                    link.href = URL.createObjectURL(blob);
+                    link.download = "artifacts.zip";
+                    link.click();
+                }}
+                resetProgress();
             }}
         }}
+
         function pauseDownloads() {{
             isPaused = true;
             activeXHRs.forEach(xhr => xhr.abort());
@@ -606,12 +617,14 @@ def generate_html(file_data):
             document.getElementById('pauseBtn').textContent = '继续下载';
             document.getElementById('pauseBtn').onclick = resumeDownloads;
         }}
+
         function resumeDownloads() {{
             isPaused = false;
             document.getElementById('pauseBtn').textContent = '暂停下载';
             document.getElementById('pauseBtn').onclick = pauseDownloads;
             startDownloads();
         }}
+
         function cancelDownloads() {{
             isPaused = true;
             activeXHRs.forEach(xhr => xhr.abort());
@@ -621,7 +634,7 @@ def generate_html(file_data):
             totalSize = 0;
             downloadedSize = 0;
             completedFiles = 0;
-            currentQueueIndex = 0;
+            currentIndex = 0;
             downloadedFiles = [];
             document.querySelectorAll('.file-progress-bar').forEach(bar => bar.style.width = '0%');
             document.querySelectorAll('.status-text').forEach(span => span.textContent = '');
