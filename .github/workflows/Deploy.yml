@@ -79,7 +79,7 @@ jobs:
           AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
           AWS_DEFAULT_REGION: auto
           AWS_ENDPOINT_URL: ${{ secrets.R2_ENDPOINT }}
-        
+          AWS_MAX_ATTEMPTS: 5
         run: |
           aws s3 cp s3://${{ secrets.R2_BUCKET }}/.last_deployed_commit .last_deployed_commit --endpoint-url ${{ secrets.R2_ENDPOINT }} || true
           if [ -f .last_deployed_commit ]; then
