@@ -131,7 +131,7 @@
         <div id="buttonContainer" class="button-container">
             <button id="localizationButton" class="button">更换汉化资源</button>
             <div class="dropdown">
-                <a href="#" onclick="updateSelection('shale')">国服(shale)</a>
+                <a href="#" onclick="updateSelection('new')">作者做的新资源(new)</a>
                 <a href="#" onclick="updateSelection('beicheng')">北辰(beicheng)</a>
                 <a href="#" onclick="updateSelection('ourplay')">OurPlay(ourplay)</a>
             </div>
@@ -209,10 +209,19 @@
                         headers: { "Content-Type": "application/json" },
                         body: JSON.stringify({ group: selectedGroup })
                     })
-                    .then(response => response.json())
-                    .then(data => {
-                        showModal(data.message || "操作成功！");
-                    })
+					.then(response => {
+						if (!response.ok) {
+							return response.json().then(data => {
+								showModal(data.error || "请求失败，请检查网络连接！");
+								return Promise.reject(data.error);
+							});
+						}
+						return response.json();
+					})
+					.then(data => {
+						// Success handling
+						showModal(data.message || "操作成功！");
+					})
                     .catch(error => {
                         showModal("请求失败，请检查网络连接！");
 						reroute_status = false;
