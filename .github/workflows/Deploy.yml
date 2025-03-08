@@ -94,7 +94,7 @@ jobs:
             echo "No new commit detected. Skipping deployment."
             exit 0
           else
-            aws s3 sync assets/ s3://${{ secrets.R2_BUCKET }}/ --checksum-algorithm CRC32
+            aws s3 sync assets/ s3://${{ secrets.R2_BUCKET }}/ --checksum-algorithm CRC32 --metadata-directive REPLACE --content-type "binary/octet-stream"
             echo $CURRENT > .last_deployed_commit
             aws s3 cp .last_deployed_commit s3://${{ secrets.R2_BUCKET }}/.last_deployed_commit --checksum-algorithm CRC32
           fi
