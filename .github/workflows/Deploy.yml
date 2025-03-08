@@ -72,8 +72,14 @@ jobs:
             git commit -m "更新子模块指针 [skip ci]"
             git push --recurse-submodules=on-demand origin HEAD
           fi
-          
-      - name: Check if should deploy
+      - name: Setup AWS CLI Credentials
+        uses: aws-actions/configure-aws-credentials@v4.1.0
+        with:
+          aws-access-key-id: ${{ secrets.R2_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          aws-region: auto
+
+      - name: Determine if deployment is necessary
         id: check_deploy
         run: |
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
@@ -81,6 +87,7 @@ jobs:
             echo "should_deploy=true" >> $GITHUB_ENV
             exit 0
           fi
+          aws s3 cp s3://${{ secrets.R2_BUCKET }}/.last_deployed_commit .last_deployed_commit --endpoint-url ${{ secrets.R2_ENDPOINT }} || true
           if [ -f .last_deployed_commit ]; then
             LAST_DEPLOYED=$(cat .last_deployed_commit)
           else
@@ -95,18 +102,51 @@ jobs:
           else
             echo "New commit detected. Proceeding with deployment."
             echo "should_deploy=true" >> $GITHUB_ENV
-            echo $CURRENT > .last_deployed_commit
-            git add .last_deployed_commit
-            git commit -m "更新部署sha [skip ci]"
-            git push origin
           fi
-          
-      - name: Upload Artifact to GitHub Pages
-        uses: actions/upload-pages-artifact@v3
-        if: ${{ env.should_deploy == 'true' }}
-        with:
-          path: './assets'
 
-      - name: Deploy to GitHub Pages
-        uses: actions/deploy-pages@v4
-        if: ${{ env.should_deploy == 'true' }}
+      - name: Deploy to Cloudflare R2
+        if: env.should_deploy == 'true'
+        run: |
+          aws s3 sync assets/ s3://${{ secrets.R2_BUCKET }}/ --endpoint-url ${{ secrets.R2_ENDPOINT }} --delete
+
+      - name: Update last deployed commit in R2
+        if: env.should_deploy == 'true'
+        run: |
+          echo "${{ github.sha }}" > .last_deployed_commit
+          aws s3 cp .last_deployed_commit s3://${{ secrets.R2_BUCKET }}/.last_deployed_commit --endpoint-url ${{ secrets.R2_ENDPOINT }}
+      #- name: Check if should deploy
+      #  id: check_deploy
+      #  run: |
+      #    if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+      #      echo "Manual trigger – proceeding with deployment."
+      #      echo "should_deploy=true" >> $GITHUB_ENV
+      #      exit 0
+      #    fi
+      #    PREVIOUS_DEPLOY_URL="https://bluearchive.me/.last_deployed_commit"
+      #    curl -s $PREVIOUS_DEPLOY_URL > .last_deployed_commit
+      #    if [ -f .last_deployed_commit ]; then
+      #      LAST_DEPLOYED=$(cat .last_deployed_commit)
+      #    else
+      #      LAST_DEPLOYED=""
+      #    fi
+      #    CURRENT=$(git rev-parse HEAD)
+      #    echo "Current commit: $CURRENT"
+      #    echo "Last deployed commit: $LAST_DEPLOYED"
+      #    if [ "$CURRENT" = "$LAST_DEPLOYED" ]; then
+      #      echo "No new commit detected. Skipping deployment."
+      #      echo "should_deploy=false" >> $GITHUB_ENV
+      #    else
+      #      echo "New commit detected. Proceeding with deployment."
+      #      echo "should_deploy=true" >> $GITHUB_ENV
+      #      echo $CURRENT > ./assets/.last_deployed_commit
+      #    fi
+          
+      #- name: Upload Artifact to GitHub Pages
+      #  uses: actions/upload-pages-artifact@v3
+      #  if: ${{ env.should_deploy == 'true' }}
+      #  with:
+      #    path: './assets'
+
+      #- name: Deploy to GitHub Pages
+      #  uses: actions/deploy-pages@v4
+      #  if: ${{ env.should_deploy == 'true' }}
