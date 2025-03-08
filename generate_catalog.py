@@ -73,7 +73,6 @@ def generate_html(file_data):
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>蔚蓝档案日服汉化文件资源库</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.0/jszip.min.js"></script>
     <style>
         body {{ 
             font-family: Arial, sans-serif; 
@@ -393,6 +392,12 @@ def generate_html(file_data):
             <img src="https://www.bilibili.com/favicon.ico" class="icon" alt="Bilibili">
         </a>
     </div>
+    <script type="module">
+      (async () => {{
+          const module = await import('https://cdn.jsdelivr.net/npm/client-zip/index.js');
+          window.downloadZip = module.downloadZip;
+      }})();
+    </script>
     <script>
         const fileData = {json.dumps(file_data)};
         let downloadQueue = [];
@@ -493,18 +498,23 @@ def generate_html(file_data):
                 document.getElementById('startBtn').disabled = totalFiles === 0;
             }}
         }});
+        
         async function compressAndDownload() {{
-            const zip = new JSZip();
-            downloadedFiles.forEach(file => {{
-                zip.file(file.filename, file.blob);
-            }});
-            const content = await zip.generateAsync({{type:"blob"}});
-            const link = document.createElement('a');
-            link.href = URL.createObjectURL(content);
+            const files = downloadedFiles.map(file => ({{
+                name: file.filename,
+                input: file.blob
+            }}));
+            
+            const blob = await window.downloadZip(files).blob();
+            
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
             link.download = "artifacts.zip";
             link.click();
+            
             downloadedFiles = [];
         }}
+
         async function startDownloads() {{
             isPaused = false;
             if (currentQueueIndex === 0) {{
