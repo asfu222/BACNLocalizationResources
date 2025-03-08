@@ -78,12 +78,11 @@ jobs:
         run: |
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             echo "Manual trigger – proceeding with deployment."
-            echo "::set-output name=should_deploy::true"
+            echo "should_deploy=true" >> $GITHUB_ENV
             exit 0
           fi
-          git fetch origin gh-pages || true
-          if git show-ref --verify --quiet refs/remotes/origin/gh-pages; then
-            LAST_DEPLOYED=$(git show origin/gh-pages:.last_deployed_commit 2>/dev/null || echo "")
+          if [ -f .last_deployed_commit ]; then
+            LAST_DEPLOYED=$(cat .last_deployed_commit)
           else
             LAST_DEPLOYED=""
           fi
@@ -92,18 +91,22 @@ jobs:
           echo "Last deployed commit: $LAST_DEPLOYED"
           if [ "$CURRENT" = "$LAST_DEPLOYED" ]; then
             echo "No new commit detected. Skipping deployment."
-            echo "::set-output name=should_deploy::false"
+            echo "should_deploy=false" >> $GITHUB_ENV
           else
             echo "New commit detected. Proceeding with deployment."
-            echo "::set-output name=should_deploy::true"
+            echo "should_deploy=true" >> $GITHUB_ENV
+            echo $CURRENT > .last_deployed_commit
+            git add .last_deployed_commit
+            git commit -m "更新部署sha [skip ci]"
+            git push origin
           fi
           
       - name: Upload Artifact to GitHub Pages
         uses: actions/upload-pages-artifact@v3
-        if: ${{ steps.check_deploy.outputs.should_deploy == 'true' }}
+        if: ${{ env.should_deploy == 'true' }}
         with:
           path: './assets'
 
       - name: Deploy to GitHub Pages
         uses: actions/deploy-pages@v4
-        if: ${{ steps.check_deploy.outputs.should_deploy == 'true' }}
+        if: ${{ env.should_deploy == 'true' }}
