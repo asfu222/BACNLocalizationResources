@@ -14,7 +14,7 @@ def is_hidden(filepath: Path):
     else:
         return filepath.name.startswith('.')
 
-ALLOWED_PATHS = [Path("assets/beicheng"), Path("assets/new"), Path("assets/ourplay"), Path("assets/shale")]
+ALLOWED_PATHS = [Path("assets/beicheng"), Path("assets/new"), Path("assets/ourplay")]
 OUTPUT_FILE = Path("assets/catalog.html")
 STATIC_NAMES = ["bundleDownloadInfo.json", "TableCatalog.bytes", "MediaCatalog.bytes"]
 
@@ -46,7 +46,16 @@ def generate_file_list():
                     "extension": file_path.suffix
                 })
     return file_data
-
+def generate_catalog_jsons():
+    for base_path in ALLOWED_PATHS:
+        if not base_path.exists():
+            continue
+        for subdir in base_path.iterdir():
+            file_list = [file.relative_to(subdir) for file in subdir.rglob("*") if file.is_file()]
+            if len(file_list) > 0:
+                with open(subdir / "catalog.json", "wb") as c_json:
+                    c_json.write(json.dumps(file_list, separators=(',', ':'))
+        
 def build_directory_tree(file_data):
     root = {"name": "", "children": {}, "files": [], "all_files": set()}
     for index, file in enumerate(file_data):
@@ -657,6 +666,8 @@ def main():
     html_content = generate_html(file_data)
     OUTPUT_FILE.write_text(html_content, encoding="utf-8")
     print(f"Generated {OUTPUT_FILE} with {len(file_data)} files.")
+    generate_catalog_jsons()
+    print("Generated catalog jsons")
 
 if __name__ == "__main__":
     main()
