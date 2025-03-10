@@ -54,7 +54,7 @@ def generate_catalog_jsons():
             file_list = [file.relative_to(subdir) for file in subdir.rglob("*") if file.is_file()]
             if len(file_list) > 0:
                 with open(subdir / "catalog.json", "wb") as c_json:
-                    c_json.write(json.dumps(file_list, separators=(',', ':'))
+                    c_json.write(json.dumps(file_list, separators=(',', ':')).encode())
         
 def build_directory_tree(file_data):
     root = {"name": "", "children": {}, "files": [], "all_files": set()}
