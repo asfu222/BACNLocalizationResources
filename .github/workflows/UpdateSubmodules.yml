@@ -4,7 +4,9 @@ on:
   schedule:
     - cron: '*/15 * * * *'
   workflow_dispatch:
-
+permissions:
+  contents: write
+  actions: write
 jobs:
   check_submodule_update:
     runs-on: ubuntu-latest
