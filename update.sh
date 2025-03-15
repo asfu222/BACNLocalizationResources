@@ -38,8 +38,11 @@ download_file "${BASE_URL}/TableBundles/Excel.zip" "Excel.zip"
 git clone --depth 1 https://github.com/asfu222/BlueArchiveLocalizationTools.git
 cd BlueArchiveLocalizationTools
 $PYTHON_CMD -m pip install -r requirements.txt
-find ../assets -type d -path '*/buildSrc/Excel' | xargs -I {} $PYTHON_CMD build_excel_zip.py ../Excel.zip {} $(dirname {} | sed 's|/buildSrc/Excel||')/Excel.zip
-
+find ../assets -type d -path '*/buildSrc/Excel' | while read -r d; do
+  out=$(echo "$d" | sed 's|/buildSrc/Excel/*$|/Excel.zip|')
+  echo ../Excel.zip "$d" "$out"
+  $PYTHON_CMD build_excel_zip.py ../Excel.zip "$d" "$out"
+done
 cd ..
 find . -type d -path "*/buildSrc/Excel" -exec rm -rf {} +
 
