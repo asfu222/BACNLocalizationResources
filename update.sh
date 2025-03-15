@@ -35,9 +35,8 @@ download_file "${BASE_URL}/Android/bundleDownloadInfo.json" "bundleDownloadInfo-
 download_file "${BASE_URL}/iOS/bundleDownloadInfo.json" "bundleDownloadInfo-iOS.json"
 download_file "${BASE_URL}/TableBundles/Excel.zip" "Excel.zip"
 
-$PYTHON_CMD -m pip install -r requirements.txt
-
 git clone --depth 1 https://github.com/asfu222/BlueArchiveLocalizationTools.git
+$PYTHON_CMD -m pip install -r BlueArchiveLocalizationTools/requirements.txt
 find ./assets -type d -path '*/buildSrc/Excel' | xargs -I {} $PYTHON_CMD BlueArchiveLocalizationTools/build_excel_zip.py ./Excel.zip $(dirname {} | sed 's|/buildSrc/Excel||')
 find . -type d -name "*/buildSrc/Excel" -exec rm -rf {} +
 
