@@ -60,6 +60,7 @@ def patch_files(original_catalog_path, files_path, bypass_path = None) -> None:
             crc_pos = cursor.tell()
             crc = read_i64()
             patched_file = os.path.join(files_path, key)
+            print(patched_file)
             patched_file_size = os.path.getsize(patched_file)
             struct.pack_into("q", bytes_data, size_pos, patched_file_size)
             struct.pack_into('q', bytes_data, crc_pos, calculate_crc32(patched_file))
