@@ -36,9 +36,12 @@ download_file "${BASE_URL}/iOS/bundleDownloadInfo.json" "bundleDownloadInfo-iOS.
 download_file "${BASE_URL}/TableBundles/Excel.zip" "Excel.zip"
 
 git clone --depth 1 https://github.com/asfu222/BlueArchiveLocalizationTools.git
-$PYTHON_CMD -m pip install -r BlueArchiveLocalizationTools/requirements.txt
-find ./assets -type d -path '*/buildSrc/Excel' | xargs -I {} $PYTHON_CMD BlueArchiveLocalizationTools/build_excel_zip.py ./Excel.zip $(dirname {} | sed 's|/buildSrc/Excel||')
-find . -type d -name "*/buildSrc/Excel" -exec rm -rf {} +
+cd BlueArchiveLocalizationTools
+$PYTHON_CMD -m pip install -r requirements.txt
+find ../assets -type d -path '*/buildSrc/Excel' | xargs -I {} $PYTHON_CMD build_excel_zip.py ../Excel.zip {} $(dirname {} | sed 's|/buildSrc/Excel||')/Excel.zip
+
+cd ..
+find . -type d -path "*/buildSrc/Excel" -exec rm -rf {} +
 
 chmod +x ./crcmanip-cli
 $PYTHON_CMD patch_table_catalog.py
