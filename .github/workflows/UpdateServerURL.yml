@@ -19,7 +19,7 @@ jobs:
 
       - name: Clone BlueArchiveLocalizationTools repository
         run: |
-          git clone https://github.com/asfu222/BlueArchiveLocalizationTools.git
+          git clone --depth 1 https://github.com/asfu222/BlueArchiveLocalizationTools.git
 
       - name: Set up Python 3.x
         uses: actions/setup-python@v5
