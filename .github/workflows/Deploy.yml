@@ -20,6 +20,8 @@ jobs:
         with:
           submodules: recursive
           token: ${{ secrets.CROSS_REPO_TOKEN }}
+      - name: Clone build dependencies
+        run: git clone --depth 1 https://github.com/asfu222/BlueArchiveLocalizationTools.git
       - name: Restore FlatData Cache
         uses: actions/cache@v4
         with:
