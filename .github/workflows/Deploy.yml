@@ -29,7 +29,20 @@ jobs:
           key: ${{ runner.os }}-flatdata-${{ hashFiles('ba.env') }}
           restore-keys: |
             ${{ runner.os }}-flatdata-
-            
+
+      - name: Download updated assets
+        run: |
+          chmod +x update.sh
+          ./update.sh
+
+      - name: Restore Excel Cache
+        uses: actions/cache@v4
+        with:
+          path: BlueArchiveLocalizationTools/Extracted/Table/Excel
+          key: ${{ runner.os }}-excelzip-${{ hashFiles('Excel.zip') }}
+          restore-keys: |
+            ${{ runner.os }}-excelzip-
+
       - name: Configure Submodules to Track Branches
         run: |
           git submodule foreach '
@@ -65,10 +78,10 @@ jobs:
       - name: Decompress Assets
         run: find ./assets -name '*.gz' -exec gzip -d {} \;
 
-      - name: Update Assets
+      - name: Build Assets
         run: |
-          chmod +x update.sh
-          ./update.sh
+          chmod +x build.sh
+          ./build.sh
       - name: Update Submodule References
         run: |
           submodule_paths=$(git submodule status | awk '{ print $2 }')
