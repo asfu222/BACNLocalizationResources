@@ -20,7 +20,14 @@ jobs:
         with:
           submodules: recursive
           token: ${{ secrets.CROSS_REPO_TOKEN }}
-              
+      - name: Restore FlatData Cache
+        uses: actions/cache@v4
+        with:
+          path: BlueArchiveLocalizationTools/Extracted/FlatData
+          key: ${{ runner.os }}-flatdata-${{ hashFiles('ba.env') }}
+          restore-keys: |
+            ${{ runner.os }}-flatdata-
+            
       - name: Configure Submodules to Track Branches
         run: |
           git submodule foreach '
