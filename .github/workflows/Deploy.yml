@@ -19,7 +19,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           submodules: recursive
-          token: ${{ secrets.CROSS_REPO_TOKEN }}
+          token: ${{ secrets.GITHUB_TOKEN }}
       - name: Clone build dependencies
         run: git clone --depth 1 https://github.com/asfu222/BlueArchiveLocalizationTools.git
       - name: Restore FlatData Cache
@@ -60,20 +60,6 @@ jobs:
 
       #- name: Setup GitHub Pages
       #  uses: actions/configure-pages@v5
-
-      - name: Check and Compress Database Files
-        run: |
-          find ./assets -name '*.db' -exec gzip -9 {} \; -exec echo "已压缩： {}" \;
-
-      - name: Commit Changes
-        shell: bash
-        run: |
-          git submodule foreach --recursive bash -c '
-            if [[ -n "$(git status --porcelain)" ]]; then
-              git add .
-              git commit -m "压缩子模块资源"
-            fi
-          '
 
       - name: Decompress Assets
         run: find ./assets -name '*.gz' -exec gzip -d {} \;
