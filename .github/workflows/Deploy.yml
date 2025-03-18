@@ -38,7 +38,9 @@ jobs:
       - name: Restore Excel Cache
         uses: actions/cache@v4
         with:
-          path: BlueArchiveLocalizationTools/Extracted/Table/Excel
+          path: |
+            BlueArchiveLocalizationTools/Extracted/Table/Excel
+            BlueArchiveLocalizationTools/Extracted/Temp/Table/Excel
           key: ${{ runner.os }}-excelzip-${{ hashFiles('Excel.zip') }}
           restore-keys: |
             ${{ runner.os }}-excelzip-
