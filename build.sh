@@ -27,3 +27,5 @@ $PYTHON_CMD patch_bundleDL.py
 find . -type d -name "temp" -exec rm -rf {} +
 
 $PYTHON_CMD generate_catalog.py
+
+cp -p ba.env ./assets/ba.env
