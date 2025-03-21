@@ -19,7 +19,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           submodules: recursive
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.RSS_REPO_TOKEN }}
       - name: Clone build dependencies
         run: git clone --depth 1 https://github.com/asfu222/BlueArchiveLocalizationTools.git
       - name: Restore FlatData Cache
