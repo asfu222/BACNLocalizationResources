@@ -1,3 +1,5 @@
+#!/bin/bash
+
 if command -v python3 &>/dev/null; then
     PYTHON_CMD="python3"
 elif command -v python &>/dev/null; then
