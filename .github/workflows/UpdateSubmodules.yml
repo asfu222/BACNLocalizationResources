@@ -15,29 +15,30 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v4
       with:
-        submodules: true
+        submodules: false
         fetch-depth: 1
         token: ${{ secrets.RSS_REPO_TOKEN }}
 
     - name: Check for updates in submodules' main branch
       run: |
+        echo "Checking submodules..."
         UPDATED=false
         for submodule in $(git config --file .gitmodules --get-regexp path | awk '{print $2}'); do
+          url=$(git config --file .gitmodules --get-regexp "submodule.$submodule.url" | awk '{print $2}')
           echo "Checking submodule: $submodule"
-          cd "$submodule"
-          
-          git fetch --depth 1 origin main
-          
-          current=$(git rev-parse HEAD)
-          latest=$(git rev-parse origin/main)
-          
+          export GIT_ASKPASS=$(mktemp)
+          echo "echo '${{ secrets.RSS_REPO_TOKEN }}'" > $GIT_ASKPASS
+          chmod +x $GIT_ASKPASS
+          current=$(git rev-parse HEAD:$submodule)
+          latest=$(git ls-remote "$url" refs/heads/main | awk '{print $1}')
+          rm -f $GIT_ASKPASS  # Cleanup auth helper
+          echo "'$submodule': Current commit: $current, Latest commit: $latest"
           if [ "$current" != "$latest" ]; then
             echo "Submodule '$submodule' has an update."
             UPDATED=true
           else
             echo "No update for submodule '$submodule'."
           fi
-          cd - > /dev/null
         done
         echo "SUBMODULE_STATUS=$UPDATED" >> $GITHUB_ENV
 
