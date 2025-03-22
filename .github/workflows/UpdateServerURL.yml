@@ -36,8 +36,8 @@ jobs:
           python BlueArchiveLocalizationTools/update_urls.py ba.env
       - name: Check if ba.env was modified
         run: |
-          git config user.name "github-actions"
-          git config user.email "github-actions@github.com"
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
           git add ba.env
           git status
           if git diff --cached --quiet; then
@@ -66,7 +66,7 @@ jobs:
             https://api.github.com/repos/asfu222/BAJPDownloader/dispatches \
             -d '{"event_type": "build-apk"}'
       - name: Trigger APK source update using push
-        # if: env.update_detected == 'true'
+        if: env.update_detected == 'true'
         env:
           TARGET_REPO_URL: https://x-access-token:${{ secrets.APK_SRC_REPO }}@github.com/asfu222/BAJPApkSrc.git
         run: |

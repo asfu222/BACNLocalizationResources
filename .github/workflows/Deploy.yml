@@ -57,8 +57,8 @@ jobs:
         
       - name: Configure Git Identity
         run: |
-          git config --global user.name "github-actions"
-          git config --global user.email "github-actions@github.com"
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "actions@github.com"
 
       #- name: Setup GitHub Pages
       #  uses: actions/configure-pages@v5
