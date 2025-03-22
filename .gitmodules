@@ -1,6 +1,6 @@
-[submodule "assets/new"]
-	path = assets/new
-	url = https://github.com/asfu222/new.git
+[submodule "assets/commonpng"]
+	path = assets/commonpng
+	url = https://github.com/asfu222/commonpng.git
 	branch = main
 [submodule "assets/ourplay"]
 	path = assets/ourplay
