@@ -8,16 +8,23 @@ download_file() {
     local url=$1
     local output=$2
 
-    echo "Downloading: $url"
-    curl -s -o "$output" "$url"
+    while true; do
+        echo "Downloading: $url"
+        curl -s -o "$output" "$url"
 
-    if [ $? -eq 0 ]; then
-        echo "Downloaded: $output"
-    else
-        echo "Failed to download: $url"
-        exit 1
-    fi
+        # Check if the download was successful and file is not empty
+        if [ $? -eq 0 ] && [ -s "$output" ]; then
+            echo "Downloaded: $output"
+            break
+        else
+            echo "Download failed or file is empty: $url"
+            rm -f "$output" # Remove empty or invalid file
+            echo "Retrying in 60 seconds..."
+            sleep 60
+        fi
+    done
 }
+
 
 download_file "${BASE_URL}/TableBundles/TableCatalog.bytes" "TableCatalog.bytes"
 download_file "${BASE_URL}/Android/bundleDownloadInfo.json" "bundleDownloadInfo-Android.json"
