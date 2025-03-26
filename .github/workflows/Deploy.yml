@@ -41,7 +41,7 @@ jobs:
           path: |
             BlueArchiveLocalizationTools/Extracted/Table/Excel
             BlueArchiveLocalizationTools/Extracted/Temp/Table/Excel
-          key: ${{ runner.os }}-excelzip-${{ hashFiles('Excel.zip') }}
+          key: ${{ runner.os }}-excelzip-${{ hashFiles('TableCatalog.bytes') }}
           restore-keys: |
             ${{ runner.os }}-excelzip-
 
