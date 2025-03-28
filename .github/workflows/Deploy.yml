@@ -92,7 +92,8 @@ jobs:
 
       - name: Update config files
         run: |
-          find assets/ -type f -name "catalog.json" | while read file; do
+          find ./assets -type f -name "catalog.json" | while read file; do
+            echo Found catalog $file
             relative_path="${file#assets/}"
             target_directory="/home/ubuntu/redirect_server/server_cfg/$(dirname "$relative_path")"
             ssh ubuntu@prod-clientpatch.bluearchive.me "mkdir -p '$target_directory'"
