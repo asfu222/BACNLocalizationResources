@@ -95,14 +95,14 @@ jobs:
           find assets/ -type f -name "catalog.json" | while read file; do
             relative_path="${file#assets/}"
             target_directory="/home/ubuntu/redirect_server/server_cfg/$(dirname "$relative_path")"
-            ssh ubuntu@$prod-clientpatch.bluearchive.me "mkdir -p '$target_directory'"
+            ssh ubuntu@prod-clientpatch.bluearchive.me "mkdir -p '$target_directory'"
             scp "$file" "ubuntu@prod-clientpatch.bluearchive.me:$target_directory/"
           done
 
           
       - name: Restart Redirect Server
         run: |
-          ssh ubuntu@${{ secrets.SSH_HOST }} "
+          ssh ubuntu@prod-clientpatch.bluearchive.me "
             sudo screen -S redirect_server -X quit || true
             sudo screen -dmS redirect_server bash -c 'cd /home/ubuntu/redirect_server && source venv/bin/activate && python server.py'
           "
@@ -114,7 +114,7 @@ jobs:
           AWS_DEFAULT_REGION: auto
           AWS_ENDPOINT_URL: ${{ secrets.R2_ENDPOINT }}
           AWS_MAX_ATTEMPTS: 5
-        run: aws s3 sync assets/ s3://${{ secrets.R2_BUCKET }}/ --exclude ".git" --checksum-algorithm CRC32
+        run: aws s3 sync assets/ s3://bluearchive/ --exclude ".git" --checksum-algorithm CRC32
         
       - name: Purge Cloudflare Cache
         run: |
