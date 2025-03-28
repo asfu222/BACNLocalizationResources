@@ -18,10 +18,6 @@
         .container {
             text-align: center;
         }
-        .button-container {
-            position: relative;
-            width: 300px;
-        }
         .button {
             display: block;
             width: 100%;
@@ -38,6 +34,36 @@
             box-sizing: border-box;
         }
         .button:hover {
+            background-color: #0056b3;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.4);
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            width: 300px;
+            text-align: center;
+        }
+        .modal-content button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+        .modal-content button:hover {
             background-color: #0056b3;
         }
         .icons {
@@ -60,6 +86,16 @@
 <body>
     <div class="container">
 		<a href="catalog.html" class="button">前往文件资源库</a>
+        <a href="https://github.com/asfu222/BACNLocalizationResources/raw/refs/heads/main/DNSConfig.mobileconfig" class="button">下载DNS设置</a>
+        <a href="http://prod-clientpatch.bluearchive.me:8080" class="button">下载证书</a>
+    </div>
+    <span id="connectedDisplay" style="font-size: 16px;"></span>
+    <div id="dnsPromptModal" class="modal">
+        <div class="modal-content">
+            <p>请先连接到DNS并设“蔚蓝档案汉化”为Root证书！</p>
+            <button onclick="closeDnsModal()">关闭</button>
+        </div>
+    </div>
     <div class="icons">
         <a href="https://github.com/asfu222/BACNLocalizationResources" target="_blank">
             <img src="https://www.github.com/favicon.ico" class="icon" alt="GitHub">
@@ -68,5 +104,46 @@
             <img src="https://www.bilibili.com/favicon.ico" class="icon" alt="Bilibili">
         </a>
     </div>
+    <script>
+	    let reroute_status = false;
+        function checkDnsRerouteStatus(callback) {
+			if (reroute_status === true) {
+				callback(true);
+				return;
+			}
+            fetch("https://prod-clientpatch.bluearchiveyostar.com/get_dns_reroute_status")
+                .then(response => response.json())
+                .then(data => {
+                    const reroutingStatus = data.rerouting === "true";
+					reroute_status = reroutingStatus;
+                    callback(reroutingStatus);
+                })
+                .catch(e => {
+                    callback(false);
+                });
+        }
+        function updateUIBasedOnReroutingStatus(reroutingStatus) {
+			document.getElementById("connectedDisplay").textContent = `状态：${reroutingStatus ? "已连接" : "未连接"}`;
+            if (reroutingStatus) {
+                closeDnsModal();
+            } else {
+                showDnsModal();
+            }
+        }
+        function showDnsModal() {
+            document.getElementById("dnsPromptModal").style.display = "flex";
+        }
+        function closeDnsModal() {
+            document.getElementById("dnsPromptModal").style.display = "none";
+        }
+		window.onload = function() {
+			checkDnsRerouteStatus(updateUIBasedOnReroutingStatus);
+		};
+		document.addEventListener('visibilitychange', function() {
+			if (!document.hidden) {
+				checkDnsRerouteStatus(updateUIBasedOnReroutingStatus);
+			}
+		});
+    </script>
 </body>
 </html>

@@ -41,7 +41,7 @@ jobs:
           path: |
             BlueArchiveLocalizationTools/Extracted/Table/Excel
             BlueArchiveLocalizationTools/Extracted/Temp/Table/Excel
-          key: ${{ runner.os }}-excelzip-${{ hashFiles('TableCatalog.bytes') }}
+          key: ${{ runner.os }}-excelzip-${{ hashFiles('Excel.zip') }}
           restore-keys: |
             ${{ runner.os }}-excelzip-
 
@@ -82,6 +82,30 @@ jobs:
             git commit -m "更新子模块指针 [skip ci]"
             git push --recurse-submodules=on-demand origin HEAD
           fi
+          
+      - name: Setup SSH Key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.REDIRECT_SERVER_SSH_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H prod-clientpatch.bluearchive.me >> ~/.ssh/known_hosts
+
+      - name: Update config files
+        run: |
+          find assets/ -type f -name "catalog.json" | while read file; do
+            relative_path="${file#assets/}"
+            target_directory="/home/ubuntu/redirect_server/server_cfg/$(dirname "$relative_path")"
+            ssh ubuntu@$prod-clientpatch.bluearchive.me "mkdir -p '$target_directory'"
+            scp "$file" "ubuntu@prod-clientpatch.bluearchive.me:$target_directory/"
+          done
+
+          
+      - name: Restart Redirect Server
+        run: |
+          ssh ubuntu@${{ secrets.SSH_HOST }} "
+            sudo screen -S redirect_server -X quit || true
+            sudo screen -dmS redirect_server bash -c 'cd /home/ubuntu/redirect_server && source venv/bin/activate && python server.py'
+          "
 
       - name: Deploy to Cloudflare R2
         env: 
