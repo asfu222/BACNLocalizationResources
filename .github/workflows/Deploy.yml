@@ -92,7 +92,7 @@ jobs:
 
       - name: Update config files
         run: |
-          find ./assets -type f -name "catalog.json" | while read file; do
+          find ./assets -type f -name "catalog.json" -print0 | while IFS= read -r -d '' file; do
             echo Found catalog $file
             relative_path="${file#assets/}"
             target_directory="/home/ubuntu/redirect_server/server_cfg/$(dirname "$relative_path")"
