@@ -92,12 +92,14 @@ jobs:
 
       - name: Update config files
         run: |
-          find ./assets -type f -name "catalog.json" -print0 | while IFS= read -r -d '' file; do
-            echo Found catalog $file
-            relative_path="${file#assets/}"
+          ssh ubuntu@prod-clientpatch.bluearchive.me "rm -rf /home/ubuntu/redirect_server/server_cfg/*"
+          find ./assets -type f -name "catalog.json" | while read -r file; do
+            echo "Found catalog: $file"
+            relative_path="${file#./assets/}"
             target_directory="/home/ubuntu/redirect_server/server_cfg/$(dirname "$relative_path")"
+            echo "Target directory: $target_directory"
             ssh ubuntu@prod-clientpatch.bluearchive.me "mkdir -p '$target_directory'"
-            scp "$file" "ubuntu@prod-clientpatch.bluearchive.me:$target_directory/"
+            scp "$file" "ubuntu@prod-clientpatch.bluearchive.me:$target_directory/"  
           done
 
           
