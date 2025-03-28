@@ -110,7 +110,7 @@ jobs:
           AWS_DEFAULT_REGION: auto
           AWS_ENDPOINT_URL: ${{ secrets.R2_ENDPOINT }}
           AWS_MAX_ATTEMPTS: 5
-        run: aws s3 sync assets/ s3://bluearchive/ --exclude ".git" --checksum-algorithm CRC32
+        run: aws s3 sync assets/ s3://bluearchive/ --exclude ".git" --checksum-algorithm CRC32 --no-multipart-upload
         
       - name: Purge Cloudflare Cache
         run: |
