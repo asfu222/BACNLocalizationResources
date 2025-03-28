@@ -93,14 +93,7 @@ jobs:
       - name: Update config files
         run: |
           ssh ubuntu@prod-clientpatch.bluearchive.me "rm -rf /home/ubuntu/redirect_server/server_cfg/*"
-          find ./assets -type f -name "catalog.json" | while read -r file; do
-            echo "Found catalog: $file"
-            relative_path="${file#./assets/}"
-            target_directory="/home/ubuntu/redirect_server/server_cfg/$(dirname "$relative_path")"
-            echo "Target directory: $target_directory"
-            ssh ubuntu@prod-clientpatch.bluearchive.me "mkdir -p '$target_directory'"
-            scp "$file" "ubuntu@prod-clientpatch.bluearchive.me:$target_directory/"  
-          done
+          rsync -av --include='*/' --include='catalog.json' --exclude='*' ./assets/ ubuntu@prod-clientpatch.bluearchive.me:/home/ubuntu/redirect_server/server_cfg/
 
           
       - name: Restart Redirect Server
