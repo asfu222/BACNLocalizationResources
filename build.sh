@@ -22,8 +22,14 @@ find ../assets -type d -path '*/buildSrc/Excel' | while read -r d; do
   echo ../Excel.zip "$d" "$out"
   $PYTHON_CMD build_excel_zip.py ../Excel.zip "$d" "$out"
 done
+find ../assets -type d -path '*/buildSrc/ExcelDB' | while read -r d; do
+  out=$(echo "$d" | sed 's|/buildSrc/ExcelDB/*$|/ExcelDB.db|')
+  echo ../assets/scenariovoice/latest/MediaResources/GameData/voice_file_names.json ../ExcelDB.db "$d" "$out"
+  $PYTHON_CMD build_excel_db.py ../assets/scenariovoice/latest/MediaResources/GameData/voice_file_names.json ../ExcelDB.db "$d" "$out"
+done
 cd ..
 find . -type d -path "*/buildSrc/Excel" -exec rm -rf {} +
+find . -type d -path "*/buildSrc/ExcelDB" -exec rm -rf {} +
 
 chmod +x ./crcmanip-cli
 $PYTHON_CMD patch_table_catalog.py
