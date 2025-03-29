@@ -54,8 +54,8 @@ jobs:
         uses: actions/cache@v4
         with:
           path: |
-            assets/scenariovoice
-            assetsBuildSrc/scenariovoice
+            assets/scenariovoice/latest/MediaResources/GameData/Audio/VOC_CN/CN_Main.zip
+            assetsBuildSrc/scenariovoice/latest/MediaResources/GameData/voice_file_names.json
           key: ${{ runner.os }}-scenariovoice-${{ env.LATEST_VOICE_COMMIT }}
 
       - name: Clone scenariovoice if not exist
