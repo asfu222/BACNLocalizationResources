@@ -85,7 +85,9 @@ jobs:
             echo "No changes to push."
           else
             echo "Changes detected, pushing to remote..."
+            git stash
             git pull --rebase
+            git stash pop
             git push https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
           fi
 
