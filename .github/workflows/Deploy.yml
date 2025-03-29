@@ -17,8 +17,6 @@ jobs:
         with:
           submodules: recursive
           token: ${{ secrets.RSS_REPO_TOKEN }} # Read-only access to necessary repos
-      - name: Setup current repository-only write access
-        run: git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
       - name: Clone build dependencies
         run: git clone --depth 1 https://github.com/asfu222/BlueArchiveLocalizationTools.git
       - name: Restore FlatData Cache
@@ -65,18 +63,9 @@ jobs:
           echo $(( $(cat ./assets/static/version.hash 2>/dev/null || echo 0) + 1 )) > ./assets/static/version.hash
           git add ./assets/static/version.hash
           git commit -m "更新版本号"
-          git push origin
 
       #- name: Setup GitHub Pages
       #  uses: actions/configure-pages@v5
-
-      - name: Decompress Assets
-        run: find ./assets -name '*.gz' -exec gzip -d {} \;
-
-      - name: Build Assets
-        run: |
-          chmod +x build.sh
-          ./build.sh
       - name: Update Submodule References
         run: |
           submodule_paths=$(git submodule status | awk '{ print $2 }')
@@ -87,9 +76,26 @@ jobs:
             echo "子模块已是最新状态"
           else
             git commit -m "更新子模块指针 [skip ci]"
-            git push origin
           fi
           
+      - name: Push changes
+        run: |
+          git fetch origin
+          if git diff --quiet @{upstream}; then
+            echo "No changes to push."
+          else
+            echo "Changes detected, pushing to remote..."
+            git pull --rebase
+            git push https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
+          fi
+
+      - name: Decompress Assets
+        run: find ./assets -name '*.gz' -exec gzip -d {} \;
+
+      - name: Build Assets
+        run: |
+          chmod +x build.sh
+          ./build.sh
       - name: Setup SSH Key
         run: |
           mkdir -p ~/.ssh
