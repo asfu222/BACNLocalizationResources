@@ -66,13 +66,6 @@ jobs:
           git config --global user.name "GitHub Actions"
           git config --global user.email "actions@github.com"
 
-      - name: Update version.hash
-        run: |
-          mkdir -p ./assets/static/
-          echo $(( $(cat ./assets/static/version.hash 2>/dev/null || echo 0) + 1 )) > ./assets/static/version.hash
-          git add ./assets/static/version.hash
-          git commit -m "更新版本号"
-
       - name: Update Submodule References
         run: |
           submodule_paths=$(git submodule status | awk '{ print $2 }')
@@ -83,18 +76,23 @@ jobs:
             echo "子模块已是最新状态"
           else
             git commit -m "更新子模块指针 [skip ci]"
+            git push origin
           fi
-          
-      - name: Push changes
+
+      - name: Update version.hash
         run: |
-          git fetch origin
-          if git diff --quiet @{upstream}; then
-            echo "No changes to push."
+          mkdir -p ./assets/static/
+          LATEST_COMMIT_MESSAGE=$(git log -1 --pretty=%B HEAD)
+          if [ "$LATEST_COMMIT_MESSAGE" = "更新版本号 [skip ci]" ]; then
+            git rev-parse HEAD^ > ./assets/static/version.hash
           else
-            echo "Changes detected, pushing to remote..."
-            git stash
-            git pull --rebase
-            git stash pop
+            git rev-parse HEAD > ./assets/static/version.hash
+          fi
+          git add ./assets/static/version.hash
+          if git diff --cached --quiet; then
+            echo "版本号已是最新"
+          else
+            git commit -m "更新版本号 [skip ci]"
             git push origin
           fi
 
