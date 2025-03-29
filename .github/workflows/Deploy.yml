@@ -102,6 +102,13 @@ jobs:
             git push origin
           fi
 
+      - name: Decompress Assets
+        run: find ./assets -name '*.gz' -exec gzip -d {} \;
+
+      - name: Build Assets
+        run: |
+          chmod +x build.sh
+          ./build.sh
       - name: Update version.hash
         run: |
           mkdir -p ./assets/static/
@@ -118,14 +125,6 @@ jobs:
             git commit -m "更新版本号 [skip ci]"
             git push origin
           fi
-
-      - name: Decompress Assets
-        run: find ./assets -name '*.gz' -exec gzip -d {} \;
-
-      - name: Build Assets
-        run: |
-          chmod +x build.sh
-          ./build.sh
       - name: Cleanup git files
         run: find ./assets -name ".git" -exec rm -rf {} +
       - name: Setup SSH Key
