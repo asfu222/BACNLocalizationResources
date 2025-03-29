@@ -10,7 +10,7 @@ with open("./MediaCatalog.json", "r", encoding="utf8") as f:
     catalog_data = json.loads(f.read())
 for asset_dir in Path('./assets').iterdir():
     media_dir = asset_dir / "latest" / "MediaResources"
-    voicepack_path = media_dir / "GameData" / "Audio" / "VOC_CN" / "CN_Main" / "CN_Main.zip"
+    voicepack_path = media_dir / "GameData" / "Audio" / "VOC_CN" / "CN_Main.zip"
 
     if voicepack_path.is_file():
         catalog_data["MediaResources"]["audio/voc_cn/cn_main/cn_main"] = {
