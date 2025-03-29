@@ -23,6 +23,7 @@ for asset_dir in Path('./assets').iterdir():
             "media_type": 1
         }
         catalog_path = media_dir / "Catalog"
+        catalog_path.mkdir(parents=True, exist_ok=True)
         catalog_json_path = catalog_path / "MediaCatalog.json"
         with open(catalog_json_path, "wb") as f:
             f.write(json.dumps(catalog_data).encode())
