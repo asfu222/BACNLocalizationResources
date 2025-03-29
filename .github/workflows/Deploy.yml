@@ -55,6 +55,7 @@ jobs:
         with:
           path: |
             assets/scenariovoice
+            assetsBuildSrc/scenariovoice
           key: ${{ runner.os }}-scenariovoice-${{ env.LATEST_VOICE_COMMIT }}
 
       - name: Clone scenariovoice if not exist

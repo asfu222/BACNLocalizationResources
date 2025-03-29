@@ -15,8 +15,8 @@ cd BlueArchiveLocalizationTools
 $PYTHON_CMD -m pip install -r requirements.txt
 if [ ! -f "../assets/scenariovoice/buildSrc/latest/MediaResources/GameData/voice_file_names.json" ]; then
 	echo "Cache miss: Building ScenarioVoice..."
-	mkdir -p ../assets/scenariovoice/buildSrc/latest/MediaResources/GameData/
-	python voicecn.py ../assets/scenariovoice/latest/MediaResources/GameData ../assets/scenariovoice/buildSrc/latest/MediaResources/GameData/voice_file_names.json
+	mkdir -p ../assetsBuildSrc/scenariovoice/latest/MediaResources/GameData/
+	python voicecn.py ../assets/scenariovoice/latest/MediaResources/GameData ../assetsBuildSrc/scenariovoice/latest/MediaResources/GameData/voice_file_names.json
 fi
 find ../assets -type d -path '*/buildSrc/Excel' | while read -r d; do
   out=$(echo "$d" | sed 's|/buildSrc/Excel/*$|/Excel.zip|')
@@ -25,8 +25,8 @@ find ../assets -type d -path '*/buildSrc/Excel' | while read -r d; do
 done
 find ../assets -type d -path '*/buildSrc/ExcelDB' | while read -r d; do
   out=$(echo "$d" | sed 's|/buildSrc/ExcelDB/*$|/ExcelDB.db|')
-  echo ../assets/scenariovoice/buildSrc/latest/MediaResources/GameData/voice_file_names.json ../ExcelDB.db "$d" "$out"
-  $PYTHON_CMD build_excel_db.py ../assets/scenariovoice/buildSrc/latest/MediaResources/GameData/voice_file_names.json ../ExcelDB.db "$d" "$out"
+  echo ../assetsBuildSrc/scenariovoice/latest/MediaResources/GameData/voice_file_names.json ../ExcelDB.db "$d" "$out"
+  $PYTHON_CMD build_excel_db.py ../assetsBuildSrc/scenariovoice/latest/MediaResources/GameData/voice_file_names.json ../ExcelDB.db "$d" "$out"
 done
 cd ..
 find ./assets -type d -path "*/buildSrc/Excel" -exec rm -rf {} +
