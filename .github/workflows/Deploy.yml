@@ -146,7 +146,7 @@ jobs:
             sudo screen -dmS redirect_server bash -c 'cd /home/ubuntu/redirect_server && source venv/bin/activate && python server.py'
           "
       - name: Cleanup git files
-        run: find ./assets -type d -name ".git" -exec rm -rf {} +
+        run: find ./assets -name ".git" -exec rm -rf {} +
       - name: Deploy to Cloudflare R2
         env: 
           AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
