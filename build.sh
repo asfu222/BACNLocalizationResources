@@ -13,6 +13,10 @@ echo "Using $PYTHON_CMD"
 
 cd BlueArchiveLocalizationTools
 $PYTHON_CMD -m pip install -r requirements.txt
+if [ ! -f "../assets/scenariovoice/latest/MediaResources/GameData/voice_file_names.json" ]; then
+	echo "Cache miss: Building ScenarioVoice..."
+	python voicecn.py ../assets/scenariovoice/latest/MediaResources/GameData ../assets/scenariovoice/latest/MediaResources/GameData/voice_file_names.json
+fi
 find ../assets -type d -path '*/buildSrc/Excel' | while read -r d; do
   out=$(echo "$d" | sed 's|/buildSrc/Excel/*$|/Excel.zip|')
   echo ../Excel.zip "$d" "$out"

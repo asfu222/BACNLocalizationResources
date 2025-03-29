@@ -25,8 +25,6 @@ jobs:
         with:
           path: BlueArchiveLocalizationTools/Extracted/FlatData
           key: ${{ runner.os }}-flatdata-${{ hashFiles('ba.env') }}
-          restore-keys: |
-            ${{ runner.os }}-flatdata-
 
       - name: Download updated assets
         run: |
@@ -40,8 +38,32 @@ jobs:
             BlueArchiveLocalizationTools/Extracted/Table/Excel
             BlueArchiveLocalizationTools/Extracted/Temp/Table/Excel
           key: ${{ runner.os }}-excelzip-${{ hashFiles('Excel.zip') }}
-          restore-keys: |
-            ${{ runner.os }}-excelzip-
+      - name: Restore ExcelDB Cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            BlueArchiveLocalizationTools/Extracted/Table/ExcelDB
+          key: ${{ runner.os }}-exceldb-${{ hashFiles('ExcelDB.db') }}
+          
+      - name: Get latest commit hash for scenariovoice
+        run: |
+          LATEST_VOICE_COMMIT=$(git ls-remote https://x-access-token:${{ secrets.RSS_REPO_TOKEN }}@github.com/asfu222/scenariovoice.git HEAD | awk '{ print $1 }')
+          echo "LATEST_VOICE_COMMIT=$LATEST_VOICE_COMMIT" >> $GITHUB_ENV      
+          
+      - name: Restore ScenarioVoice Cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            assets/scenariovoice
+          key: ${{ runner.os }}-scenariovoice-${{ env.LATEST_VOICE_COMMIT }}
+
+      - name: Clone scenariovoice if not exist
+        run: |
+          if [ ! -d "assets/scenariovoice" ]; then
+            echo "Cache miss: Cloning scenariovoice..."
+            git clone https://x-access-token:${{ secrets.RSS_REPO_TOKEN }}@github.com/asfu222/scenariovoice.git assets/scenariovoice
+          fi
+
       - name: Setup git credentials
         run: |
             git config url."https://api:${{ secrets.GITHUB_TOKEN }}@github.com/".insteadOf "https://github.com/"
