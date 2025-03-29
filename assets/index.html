@@ -146,7 +146,7 @@
                 .then(response => response.json())
                 .then(data => {
                     if (data.status === "OK") {
-						should_update = !should_update;
+						should_update = data.newValue === "true";
 						updateUI();
 					}
                 })
