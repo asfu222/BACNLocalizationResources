@@ -113,11 +113,7 @@ jobs:
         run: |
           mkdir -p ./assets/static/
           LATEST_COMMIT_MESSAGE=$(git log -1 --pretty=%B HEAD)
-          if [ "$LATEST_COMMIT_MESSAGE" = "更新版本号 [skip ci]" ]; then
-            git rev-parse HEAD^ > ./assets/static/version.hash
-          else
-            git rev-parse HEAD > ./assets/static/version.hash
-          fi
+          git rev-parse HEAD > ./assets/static/version.hash
           git add ./assets/static/version.hash
           if git diff --cached --quiet; then
             echo "版本号已是最新"
