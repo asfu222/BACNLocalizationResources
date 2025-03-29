@@ -88,7 +88,7 @@ jobs:
             git stash
             git pull --rebase
             git stash pop
-            git push https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
+            git -c credential.helper= push https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git HEAD:main
           fi
 
       - name: Decompress Assets
