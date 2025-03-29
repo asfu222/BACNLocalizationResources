@@ -27,6 +27,7 @@ download_file() {
 
 
 download_file "${BASE_URL}/TableBundles/TableCatalog.bytes" "TableCatalog.bytes"
+download_file "${BASE_URL}/MediaResources/Catalog/MediaCatalog.bytes" "MediaCatalog.bytes"
 download_file "${BASE_URL}/Android/bundleDownloadInfo.json" "bundleDownloadInfo-Android.json"
 download_file "${BASE_URL}/iOS/bundleDownloadInfo.json" "bundleDownloadInfo-iOS.json"
 download_file "${BASE_URL}/TableBundles/Excel.zip" "Excel.zip"

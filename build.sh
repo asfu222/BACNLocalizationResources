@@ -30,8 +30,13 @@ done
 cd ..
 find . -type d -path "*/buildSrc/Excel" -exec rm -rf {} +
 find . -type d -path "*/buildSrc/ExcelDB" -exec rm -rf {} +
+find . -type f -name "voice_file_names.json" -exec rm -rf {} +
 
 chmod +x ./crcmanip-cli
+chmod +x ./MemoryPackRepacker
+
+./MemoryPackRepacker deserialize media MediaCatalog.bytes MediaCatalog.json
+$PYTHON_CMD patch_media_catalog.py
 $PYTHON_CMD patch_table_catalog.py
 $PYTHON_CMD patch_bundleDL.py
 

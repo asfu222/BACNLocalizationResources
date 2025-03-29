@@ -14,7 +14,7 @@ def is_hidden(filepath: Path):
     else:
         return filepath.name.startswith('.')
 
-ALLOWED_PATHS = [Path("assets/beicheng"), Path("assets/commonpng"), Path("assets/ourplay")]
+ALLOWED_PATHS = [Path("assets/beicheng"), Path("assets/commonpng"), Path("assets/scenariovoice"), Path("assets/ourplay")]
 OUTPUT_FILE = Path("assets/catalog.html")
 STATIC_NAMES = ["bundleDownloadInfo.json", "TableCatalog.bytes", "MediaCatalog.bytes"]
 
