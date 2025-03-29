@@ -118,7 +118,7 @@
                 .then(response => response.json())
                 .then(data => {
                     const reroutingStatus = data.status === "OK";
-					const shouldUpdate = data.shouldUpdate === "true";
+					const shouldUpdate = data.shouldUpdate;
 					reroute_status = reroutingStatus;
 					should_update = shouldUpdate;
                     callback();
@@ -146,7 +146,7 @@
                 .then(response => response.json())
                 .then(data => {
                     if (data.status === "OK") {
-						should_update = data.newValue === "true";
+						should_update = data.newValue;
 						updateUI();
 					}
                 })
