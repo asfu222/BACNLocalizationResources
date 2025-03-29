@@ -145,7 +145,8 @@ jobs:
             sudo kill -9 $(sudo lsof -t -i:443) 2>/dev/null
             sudo screen -dmS redirect_server bash -c 'cd /home/ubuntu/redirect_server && source venv/bin/activate && python server.py'
           "
-
+      - name: Cleanup git files
+        run: find ./assets -type d -name ".git" -exec rm -rf {} +
       - name: Deploy to Cloudflare R2
         env: 
           AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
@@ -153,7 +154,7 @@ jobs:
           AWS_DEFAULT_REGION: auto
           AWS_ENDPOINT_URL: ${{ secrets.R2_ENDPOINT }}
           AWS_MAX_ATTEMPTS: 5
-        run: aws s3 sync assets/ s3://bluearchive/ --exclude ".git" --checksum-algorithm CRC32
+        run: aws s3 sync assets/ s3://bluearchive/ --checksum-algorithm CRC32
         
       - name: Purge Cloudflare Cache
         run: |

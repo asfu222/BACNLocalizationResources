@@ -28,9 +28,9 @@ find ../assets -type d -path '*/buildSrc/ExcelDB' | while read -r d; do
   $PYTHON_CMD build_excel_db.py ../assets/scenariovoice/latest/MediaResources/GameData/voice_file_names.json ../ExcelDB.db "$d" "$out"
 done
 cd ..
-find . -type d -path "*/buildSrc/Excel" -exec rm -rf {} +
-find . -type d -path "*/buildSrc/ExcelDB" -exec rm -rf {} +
-find . -type f -name "voice_file_names.json" -exec rm -rf {} +
+find ./assets -type d -path "*/buildSrc/Excel" -exec rm -rf {} +
+find ./assets -type d -path "*/buildSrc/ExcelDB" -exec rm -rf {} +
+find ./assets -type f -name "voice_file_names.json" -exec rm -rf {} +
 
 chmod +x ./crcmanip-cli
 chmod +x ./MemoryPackRepacker
@@ -42,7 +42,6 @@ $PYTHON_CMD patch_bundleDL.py
 
 # Clean up
 find . -type d -name "temp" -exec rm -rf {} +
-
 $PYTHON_CMD generate_catalog.py
 
 cp -p ba.env ./assets/ba.env

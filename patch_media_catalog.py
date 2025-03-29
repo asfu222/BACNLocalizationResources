@@ -18,8 +18,8 @@ for asset_dir in Path('./assets').iterdir():
             "file_name": "CN_Main.zip",
             "bytes": voicepack_path.stat().st_size,
             "crc": calculate_crc32(voicepack_path),
-            "is_prologue": false,
-            "is_split_download": false,
+            "is_prologue": False,
+            "is_split_download": False,
             "media_type": 1
         }
         catalog_path = media_dir / "Catalog"
