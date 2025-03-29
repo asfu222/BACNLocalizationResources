@@ -17,6 +17,7 @@ jobs:
         with:
           submodules: recursive
           token: ${{ secrets.RSS_REPO_TOKEN }} # Read-only access to necessary repos
+          persist-credentials: false
       - name: Clone build dependencies
         run: git clone --depth 1 https://github.com/asfu222/BlueArchiveLocalizationTools.git
       - name: Restore FlatData Cache
@@ -41,14 +42,22 @@ jobs:
           key: ${{ runner.os }}-excelzip-${{ hashFiles('Excel.zip') }}
           restore-keys: |
             ${{ runner.os }}-excelzip-
-
+      - name: Setup git credentials
+        run: |
+            git config url."https://api:${{ secrets.GITHUB_TOKEN }}@github.com/".insteadOf "https://github.com/"
+            git config url."https://ssh:${{ secrets.GITHUB_TOKEN }}@github.com/".insteadOf "ssh://git@github.com/"
+            git config url."https://git:${{ secrets.GITHUB_TOKEN }}@github.com/".insteadOf "git@github.com:"
+            git submodule foreach '
+                git config url."https://api:${{ secrets.RSS_REPO_TOKEN }}@github.com/".insteadOf "https://github.com/"
+                git config url."https://ssh:${{ secrets.RSS_REPO_TOKEN }}@github.com/".insteadOf "ssh://git@github.com/"
+                git config url."https://git:${{ secrets.RSS_REPO_TOKEN }}@github.com/".insteadOf "git@github.com:"
+            '
       - name: Configure Submodules to Track Branches
         run: |
           git submodule foreach '
             git checkout main || git checkout -b main
             git branch --set-upstream-to=origin/main main
           '
-          
       - name: Update Submodules
         run: git submodule update --recursive --remote
         
@@ -64,8 +73,6 @@ jobs:
           git add ./assets/static/version.hash
           git commit -m "更新版本号"
 
-      #- name: Setup GitHub Pages
-      #  uses: actions/configure-pages@v5
       - name: Update Submodule References
         run: |
           submodule_paths=$(git submodule status | awk '{ print $2 }')
@@ -88,7 +95,7 @@ jobs:
             git stash
             git pull --rebase
             git stash pop
-            git -c credential.helper= push https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git HEAD:main
+            git push origin
           fi
 
       - name: Decompress Assets
