@@ -13,7 +13,7 @@ echo "Using $PYTHON_CMD"
 
 cd BlueArchiveLocalizationTools
 $PYTHON_CMD -m pip install -r requirements.txt
-if [ ! -f "../assets/scenariovoice/buildSrc/latest/MediaResources/GameData/voice_file_names.json" ]; then
+if [ ! -f "../assetsBuildSrc/scenariovoice/latest/MediaResources/GameData/voice_file_names.json" ]; then
 	echo "Cache miss: Building ScenarioVoice..."
 	mkdir -p ../assetsBuildSrc/scenariovoice/latest/MediaResources/GameData/
 	python voicecn.py ../assets/scenariovoice/latest/MediaResources/GameData ../assetsBuildSrc/scenariovoice/latest/MediaResources/GameData/voice_file_names.json
