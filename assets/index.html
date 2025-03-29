@@ -88,7 +88,9 @@
 		<a href="catalog.html" class="button">前往文件资源库</a>
         <a href="https://github.com/asfu222/BACNLocalizationResources/raw/refs/heads/main/DNSConfig.mobileconfig" class="button">下载DNS设置</a>
         <a href="http://prod-clientpatch.bluearchive.me:8080/cert.crt" class="button">下载证书</a>
+		<button class = "button" onclick="toggleShouldUpdate()">云更新开关</button>
     </div>
+	<span id="shouldUpdateDisplay" style="font-size: 16px;"></span>
     <span id="connectedDisplay" style="font-size: 16px;"></span>
     <div id="dnsPromptModal" class="modal">
         <div class="modal-content">
@@ -106,30 +108,50 @@
     </div>
     <script>
 	    let reroute_status = false;
+		let should_update = false;
         function checkDnsRerouteStatus(callback) {
 			if (reroute_status === true) {
-				callback(true);
+				callback();
 				return;
 			}
             fetch("https://prod-clientpatch.bluearchiveyostar.com/get_dns_reroute_status")
                 .then(response => response.json())
                 .then(data => {
-                    const reroutingStatus = data.rerouting === "true";
+                    const reroutingStatus = data.status === "OK";
+					const shouldUpdate = data.shouldUpdate === "true";
 					reroute_status = reroutingStatus;
-                    callback(reroutingStatus);
+					should_update = shouldUpdate;
+                    callback();
                 })
                 .catch(e => {
-                    callback(false);
+					console.error(e);
+                    callback();
                 });
         }
-        function updateUIBasedOnReroutingStatus(reroutingStatus) {
-			document.getElementById("connectedDisplay").textContent = `状态：${reroutingStatus ? "已连接" : "未连接"}`;
-            if (reroutingStatus) {
+        function updateUI() {
+			document.getElementById("connectedDisplay").textContent = `状态：${reroute_status ? "已连接" : "未连接"}`;
+			document.getElementById("shouldUpdateDisplay").textContent = `云更新：${should_update ? "已开启" : "未开启"}`;
+            if (reroute_status) {
                 closeDnsModal();
             } else {
                 showDnsModal();
             }
         }
+		function toggleShouldUpdate() {
+		    if (reroute_status !== true) {
+				updateUI();
+				return;
+			}
+			fetch("https://prod-clientpatch.bluearchiveyostar.com/toggle_update")
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === "OK") {
+						should_update = !should_update;
+						updateUI();
+					}
+                })
+                .catch(console.error);
+		}
         function showDnsModal() {
             document.getElementById("dnsPromptModal").style.display = "flex";
         }
@@ -137,11 +159,11 @@
             document.getElementById("dnsPromptModal").style.display = "none";
         }
 		window.onload = function() {
-			checkDnsRerouteStatus(updateUIBasedOnReroutingStatus);
+			checkDnsRerouteStatus(updateUI);
 		};
 		document.addEventListener('visibilitychange', function() {
 			if (!document.hidden) {
-				checkDnsRerouteStatus(updateUIBasedOnReroutingStatus);
+				checkDnsRerouteStatus(updateUI);
 			}
 		});
     </script>
