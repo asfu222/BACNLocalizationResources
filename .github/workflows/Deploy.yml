@@ -142,6 +142,8 @@ jobs:
           ssh ubuntu@prod-clientpatch.bluearchive.me "
             sudo screen -S redirect_server -X quit || true
             sudo kill -9 $(sudo lsof -t -i:443) 2>/dev/null
+            sudo kill -9 $(sudo lsof -t -i:6969) 2>/dev/null
+            sudo kill -9 $(sudo lsof -t -i:8080) 2>/dev/null
             sudo screen -dmS redirect_server bash -c 'cd /home/ubuntu/redirect_server && source venv/bin/activate && python server.py'
           "
       - name: Deploy to Cloudflare R2
