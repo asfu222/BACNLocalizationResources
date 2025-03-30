@@ -88,7 +88,9 @@
 		<a href="catalog.html" class="button">前往文件资源库</a>
         <a href="https://github.com/asfu222/BACNLocalizationResources/raw/refs/heads/main/DNSConfig.mobileconfig" class="button">下载DNS设置</a>
         <a href="http://prod-clientpatch.bluearchive.me:8080/cert.crt" class="button">下载证书</a>
+		<button class = "button" onclick="toggleUseMITM()">查看MITM劫持状态（iOS）</button>
 		<button class = "button" onclick="toggleShouldUpdate()">云更新开关</button>
+		<button class="button" onclick="openLocalizationModal()">输入本地化组</button>
     </div>
 	<span id="shouldUpdateDisplay" style="font-size: 16px;"></span>
     <span id="connectedDisplay" style="font-size: 16px;"></span>
@@ -97,6 +99,28 @@
             <p>请先连接到DNS并设“蔚蓝档案汉化”为Root证书！</p>
             <button onclick="closeDnsModal()">关闭</button>
         </div>
+    </div>
+    <div id="localizationInputModal" class="modal">
+        <div class="modal-content">
+            <h2>输入本地化组</h2>
+            <input type="text" id="localizationInput" placeholder="输入本地化组，以逗号分隔">
+            <button onclick="submitLocalization()">提交</button>
+            <button onclick="closeLocalizationModal()">关闭</button>
+        </div>
+    </div>
+    <div id="successModal" class="modal">
+        <div class="modal-content">
+            <h2>成功！</h2>
+            <p>本地化组已成功更新。</p>
+            <button onclick="closeSuccessModal()">关闭</button>
+        </div>
+    </div>
+    <div id="errorModal" class="modal">
+        <div class="modal-content">
+            <p id="errorMessage"></p>
+            <button onclick="closeErrorModal()">关闭</button>
+        </div>
+    </div>
     </div>
     <div class="icons">
         <a href="https://github.com/asfu222/BACNLocalizationResources" target="_blank">
@@ -107,20 +131,30 @@
         </a>
     </div>
     <script>
-	    let reroute_status = false;
+	    let use_mitm = false;
+	    let server_up = false;
 		let should_update = false;
-        function checkDnsRerouteStatus(callback) {
-			if (reroute_status === true) {
+		let serverLocalizationGroups = [];
+		let availableLocalizationGroups = [];
+        function checkServerStatus(callback) {
+			if (server_up === true) {
 				callback();
 				return;
 			}
-            fetch("https://prod-clientpatch.bluearchiveyostar.com/get_dns_reroute_status")
+            fetch(`https://prod-clientpatch.bluearchive${use_mitm ? "yostar.com" : ".me:6969"}/get_status`)
                 .then(response => response.json())
                 .then(data => {
-                    const reroutingStatus = data.status === "OK";
-					const shouldUpdate = data.shouldUpdate;
-					reroute_status = reroutingStatus;
-					should_update = shouldUpdate;
+                    server_up = data.status === "OK";
+					should_update = data.shouldUpdate;
+					serverLocalizationGroups = data.localizationGroups;
+					if (availableLocalizationGroups.length == 0) {
+						fetch("https://prod-clientpatch.bluearchive.me:6969/get_available_localization_groups").then(response => response.json())
+						.then(data => {
+							if (data.status === "OK") {
+							  availableLocalizationGroups = data.availableGroups;
+							}
+						})
+					}
                     callback();
                 })
                 .catch(e => {
@@ -128,15 +162,23 @@
                     callback();
                 });
         }
+		function toggleUseMITM() {
+		    use_mitm = !use_mitm;
+			server_up = false;
+			checkServerStatus(updateUI);
+		}
+		
         function updateUI() {
-			document.getElementById("connectedDisplay").textContent = `MITM劫持状态：${reroute_status ? "已连接" : "未连接"}`;
+			document.getElementById("connectedDisplay").textContent = `服务器状态：${server_up ? "已连接" : "未连接"}`;
 			document.getElementById("shouldUpdateDisplay").textContent = `云更新：${should_update ? "已开启" : "未开启"}`;
+			if (!server_up && use_mitm) {
+				showDnsModal();
+			} else {
+				closeDnsModal();
+			}
         }
 		function toggleShouldUpdate() {
-		    if (reroute_status !== true) {
-				updateUI();
-				return;
-			}
+		    if (!server_up) return;
 			fetch("https://prod-clientpatch.bluearchive.me:6969/toggle_update")
                 .then(response => response.json())
                 .then(data => {
@@ -153,12 +195,82 @@
         function closeDnsModal() {
             document.getElementById("dnsPromptModal").style.display = "none";
         }
+		
+        function openLocalizationModal() {
+            if (server_up) {
+				document.getElementById('localizationInput').value = serverLocalizationGroups.join(',');
+                document.getElementById('localizationInputModal').style.display = 'flex';
+            } else {
+                alert('Server is not up. Please try again later.');
+            }
+        }
+		
+        function closeLocalizationModal() {
+            document.getElementById('localizationInputModal').style.display = 'none';
+        }
+
+        function closeErrorModal() {
+            document.getElementById('errorModal').style.display = 'none';
+        }
+		
+		function closeSuccessModal() {
+            document.getElementById('successModal').style.display = 'none';
+        }
+
+
+		function submitLocalization() {
+            const input = document.getElementById('localizationInput').value.replace(/，/g, ",");
+			if (input == serverLocalizationGroups.join(',')) {
+				closeLocalizationModal();
+				return;
+			}
+            const localizationGroups = input.split(',').map(group => group.trim());
+            for (let group of localizationGroups) {
+                if (!availableLocalizationGroups.includes(group)) {
+                    showErrorModal('输入的本地化组无效。');
+                    return;
+                }
+            }
+
+            const data = {
+                localizationGroups: localizationGroups
+            };
+            fetch('https://prod-clientpatch.bluearchive.me:6969/change_localization_groups', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data),
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    showErrorModal(data.error);
+                } else {
+                    showSuccessModal();
+					serverLocalizationGroups = localizationGroups;
+                    closeLocalizationModal();
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showErrorModal('An error occurred while processing your request.');
+            });
+        }
+
+        function showErrorModal(message) {
+            document.getElementById('errorMessage').innerText = message;
+            document.getElementById('errorModal').style.display = 'flex';
+        }
+		function showSuccessModal() {
+            document.getElementById('successModal').style.display = 'flex';
+        }
 		window.onload = function() {
-			checkDnsRerouteStatus(updateUI);
+			checkServerStatus(updateUI);
 		};
 		document.addEventListener('visibilitychange', function() {
 			if (!document.hidden) {
-				checkDnsRerouteStatus(updateUI);
+				checkServerStatus(updateUI);
 			}
 		});
     </script>

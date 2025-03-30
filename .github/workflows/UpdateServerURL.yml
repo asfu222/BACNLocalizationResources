@@ -47,7 +47,7 @@ jobs:
             echo "update_detected=true" >> $GITHUB_ENV
           fi
       - name: Deploy updated server json to Cloudflare R2
-        if: env.update_detected == 'true'
+        if: false #env.update_detected == 'true'
         env: 
           AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
@@ -58,7 +58,7 @@ jobs:
           sed -i 's|https://prod-clientpatch.bluearchiveyostar.com/|https://prod-clientpatch.bluearchive.me:6969/|g' server-info.json
           aws s3 cp server-info.json s3://${{ secrets.R2_BUCKET }}/static/server-info.json --checksum-algorithm CRC32
       - name: Purge Cloudflare Cache
-        if: env.update_detected == 'true'
+        if: false #env.update_detected == 'true'
         run: |
           curl -X POST "https://api.cloudflare.com/client/v4/zones/${{ secrets.CF_ZONE_ID }}/purge_cache" \
              -H "Authorization: Bearer ${{ secrets.CF_PURGE_TOKEN }}" \
