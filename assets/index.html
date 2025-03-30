@@ -129,20 +129,15 @@
                 });
         }
         function updateUI() {
-			document.getElementById("connectedDisplay").textContent = `状态：${reroute_status ? "已连接" : "未连接"}`;
+			document.getElementById("connectedDisplay").textContent = `MITM劫持状态：${reroute_status ? "已连接" : "未连接"}`;
 			document.getElementById("shouldUpdateDisplay").textContent = `云更新：${should_update ? "已开启" : "未开启"}`;
-            if (reroute_status) {
-                closeDnsModal();
-            } else {
-                showDnsModal();
-            }
         }
 		function toggleShouldUpdate() {
 		    if (reroute_status !== true) {
 				updateUI();
 				return;
 			}
-			fetch("https://prod-clientpatch.bluearchiveyostar.com/toggle_update")
+			fetch("https://prod-clientpatch.bluearchive.me:6969/toggle_update")
                 .then(response => response.json())
                 .then(data => {
                     if (data.status === "OK") {
