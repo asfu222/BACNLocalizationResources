@@ -54,7 +54,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: |
-            assets/scenariovoice/latest/MediaResources/GameData/Audio/VOC_CN/CN_Main.zip
+            assets/scenariovoice/latest/MediaResources/GameData/Audio/VOC_CN/CN_Main_*.zip
             assetsBuildSrc/scenariovoice/latest/MediaResources/GameData/voice_file_names.json
           key: ${{ runner.os }}-scenariovoice-${{ env.LATEST_VOICE_COMMIT }}
 
