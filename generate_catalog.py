@@ -32,7 +32,7 @@ def generate_file_list():
     for base_path in ALLOWED_PATHS:
         if not base_path.exists():
             continue
-        for file_path in base_path.rglob("*"):
+        for file_path in sorted(base_path.rglob("*")):
             if file_path.is_file() and not is_hidden(file_path):
                 original_name = file_path.name
                 hash64 = calculate_hash64(original_name)
