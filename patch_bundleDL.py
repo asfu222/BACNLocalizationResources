@@ -75,6 +75,8 @@ def apply_patch(platform: str):
             print(f'bundleDownloadInfo.json: 修改{asset.name} CRC值 {info[asset.name]["Crc"]} -> {new_crc}')
             info[asset.name]["Size"] = new_size
             info[asset.name]["Crc"] = new_crc
+            info[asset.name]["IsPrologue"] = True
+            info[asset.name]["IsSplitDownload"] = False
 
         updated_json_path = assets_path / "bundleDownloadInfo.json"
         with open(updated_json_path, "wb") as f:
