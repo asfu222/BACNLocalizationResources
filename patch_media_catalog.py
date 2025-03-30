@@ -14,7 +14,7 @@ for asset_dir in Path('./assets').iterdir():
     for i in range(1, 1000):
         voicepack_path = media_dir / "GameData" / "Audio" / "VOC_CN" / f"CN_Main_{i}.zip"
         if voicepack_path.is_file():
-            catalog_data["MediaResources"][f"audio/voc_cn/cn_main/cn_main_{i}"] = {
+            catalog_data["MediaResources"][f"audio/voc_cn/cn_main_{i}/cn_main_{i}"] = {
                 "path": f"GameData\\Audio\\VOC_CN\\CN_Main_{i}.zip",
                 "file_name": f"CN_Main_{i}.zip",
                 "bytes": voicepack_path.stat().st_size,
