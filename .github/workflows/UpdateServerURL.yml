@@ -32,7 +32,7 @@ jobs:
 
       - name: Run update_urls.py with ba.env
         run: |
-          python BlueArchiveLocalizationTools/update_urls.py ba.env
+          python BlueArchiveLocalizationTools/update_urls.py ba.env server-info.json
       - name: Check if ba.env was modified
         run: |
           git config user.name "GitHub Actions"
@@ -46,7 +46,24 @@ jobs:
             echo "检测到悠星服务器URL更新，正在更新ba.env网址..."
             echo "update_detected=true" >> $GITHUB_ENV
           fi
-
+      - name: Deploy updated server json to Cloudflare R2
+        if: env.update_detected == 'true'
+        env: 
+          AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: auto
+          AWS_ENDPOINT_URL: ${{ secrets.R2_ENDPOINT }}
+          AWS_MAX_ATTEMPTS: 5
+        run: |
+          sed -i 's|https://prod-clientpatch.bluearchiveyostar.com/|https://prod-clientpatch.bluearchive.me:6969/|g' server-info.json
+          aws s3 cp server-info.json s3://${{ secrets.R2_BUCKET }}/static/server-info.json --checksum-algorithm CRC32
+      - name: Purge Cloudflare Cache
+        if: env.update_detected == 'true'
+        run: |
+          curl -X POST "https://api.cloudflare.com/client/v4/zones/${{ secrets.CF_ZONE_ID }}/purge_cache" \
+             -H "Authorization: Bearer ${{ secrets.CF_PURGE_TOKEN }}" \
+             -H "Content-Type: application/json" \
+             --data '{"purge_everything":true}'
       - name: Commit and push changes if ba.env was modified
         if: env.update_detected == 'true'
         run: |
