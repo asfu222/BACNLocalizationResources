@@ -10,7 +10,3 @@
 	path = assets/beicheng
 	url = https://github.com/asfu222/beicheng.git
 	branch = main
-[submodule "assets/db-example"]
-	path = assets/db-example
-	url = https://github.com/asfu222/db-example.git
-	branch = main
