@@ -134,17 +134,13 @@ jobs:
       - name: Update config files
         run: |
           ssh ubuntu@prod-clientpatch.bluearchive.me "rm -rf /home/ubuntu/redirect_server/server_cfg/*"
-          rsync -av --include='*/' --include='*/catalog.json' --exclude='*' ./assets/ ubuntu@prod-clientpatch.bluearchive.me:/home/ubuntu/redirect_server/server_cfg/
+          rsync -av --include='*/' --include='*/catalog.json' --exclude='*' ./assets/ ubuntu@prod-clientpatch.bluearchive.me:/home/ubuntu/nginx_redirect_server/server_cfg/
 
           
       - name: Restart Redirect Server
         run: |
           ssh ubuntu@prod-clientpatch.bluearchive.me "
-            sudo screen -S redirect_server -X quit || true
-            sudo kill -9 $(sudo lsof -t -i:443) 2>/dev/null
-            sudo kill -9 $(sudo lsof -t -i:6969) 2>/dev/null
-            sudo kill -9 $(sudo lsof -t -i:8080) 2>/dev/null
-            sudo screen -dmS redirect_server bash -c 'cd /home/ubuntu/redirect_server && source venv/bin/activate && python server.py'
+            sudo openresty -s quit -c /home/ubuntu/nginx_redirect_server/nginx.conf | sudo openresty -c /home/ubuntu/nginx_redirect_server/nginx.conf
           "
       - name: Deploy to Cloudflare R2
         env: 
