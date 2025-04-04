@@ -140,6 +140,7 @@ jobs:
       - name: Restart Redirect Server
         run: |
           ssh ubuntu@prod-clientpatch.bluearchive.me "
+            cd /home/ubuntu/nginx_redirect_server/
             sudo openresty -s quit -c /home/ubuntu/nginx_redirect_server/nginx.conf | sudo openresty -c /home/ubuntu/nginx_redirect_server/nginx.conf
           "
       - name: Deploy to Cloudflare R2
