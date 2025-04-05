@@ -177,7 +177,7 @@ jobs:
           AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
         run: |
-          rclone copy assets/ r2:bluearchive --s3-upload-cutoff 0 --s3-chunk-size 0 --s3-disable-checksum
+          rclone copy assets/ r2:bluearchive --s3-upload-cutoff 1G --s3-chunk-size 5M --s3-disable-checksum
 
           
       #- name: Check if should deploy
