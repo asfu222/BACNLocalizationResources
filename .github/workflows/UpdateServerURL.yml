@@ -35,10 +35,9 @@ jobs:
           python BlueArchiveLocalizationTools/update_urls.py ba.env server-info.json
       - name: Check if ba.env was modified
         run: |
-          git config user.name "GitHub Actions"
-          git config user.email "actions@github.com"
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "actions@github.com"
           git add ba.env
-          git status
           if git diff --cached --quiet; then
             echo "没有检测到更新，跳过提交"
             echo "update_detected=false" >> $GITHUB_ENV
@@ -46,31 +45,22 @@ jobs:
             echo "检测到悠星服务器URL更新，正在更新ba.env网址..."
             echo "update_detected=true" >> $GITHUB_ENV
           fi
-      - name: Deploy updated server json to Cloudflare R2
-        if: env.update_detected == 'true'
-        env: 
-          AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+      - name: Push updated server json
+        env:
+          TARGET_REPO_URL: https://x-access-token:${{ secrets.SERVER_INFO_REPO }}@github.com/asfu222/serverinfo.git
         run: |
           sed -i 's|https://prod-clientpatch.bluearchiveyostar.com/|https://prod-clientpatch.bluearchive.me:6969/|g' server-info.json
-          curl https://rclone.org/install.sh | sudo bash
-          echo "[r2]
-          type = s3
-          provider = Cloudflare
-          access_key_id = $AWS_ACCESS_KEY_ID
-          secret_access_key = $AWS_SECRET_ACCESS_KEY
-          endpoint = ${{ secrets.R2_ENDPOINT }}" > ~/.config/rclone/rclone.conf
-          rclone copy server-info.json r2:${{ secrets.R2_BUCKET }}/static/server-info.json \
-              --s3-upload-cutoff 1G \
-              --s3-chunk-size 5M \
-              --s3-disable-checksum
-      - name: Purge Cloudflare Cache
-        if: env.update_detected == 'true'
-        run: |
-          curl -X POST "https://api.cloudflare.com/client/v4/zones/${{ secrets.CF_ZONE_ID }}/purge_cache" \
-             -H "Authorization: Bearer ${{ secrets.CF_PURGE_TOKEN }}" \
-             -H "Content-Type: application/json" \
-             --data '{"purge_everything":true}'
+          git clone "$TARGET_REPO_URL" serverinfo
+          cp server-info.json serverinfo/
+          cd serverinfo
+          git add server-info.json
+          if git diff --cached --quiet; then
+            echo "没有检测到更新，跳过提交"
+          else
+            echo "检测到服务器信息更新，正在更新..."
+            git commit -m "更新服务器信息"
+            git push origin
+          fi
       - name: Commit and push changes if ba.env was modified
         if: env.update_detected == 'true'
         run: |
@@ -99,9 +89,6 @@ jobs:
         env:
           TARGET_REPO_URL: https://x-access-token:${{ secrets.APK_SRC_REPO }}@github.com/asfu222/BAJPApkSrc.git
         run: |
-          git config --global user.name "GitHub Actions"
-          git config --global user.email "actions@github.com"
-          
           git clone "$TARGET_REPO_URL" BAJPApkSrc
           date > BAJPApkSrc/.date
           cd BAJPApkSrc
