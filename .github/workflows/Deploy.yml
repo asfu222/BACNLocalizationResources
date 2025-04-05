@@ -120,7 +120,7 @@ jobs:
         with:
           path: |
             assets/beicheng/latest/TableBundles/ExcelDB.db
-          key: ${{ runner.os }}-built_exceldb-${{ hashFiles('assets/beicheng/latest/TableBundles/buildSrc/ExcelDB/*', 'assetsBuildSrc/scenariovoice/latest/MediaResources/GameData/voice_file_names.json') }}
+          key: ${{ runner.os }}-built_exceldb-${{ hashFiles('assets/beicheng/latest/TableBundles/buildSrc/ExcelDB/*') }}-${{ env.LATEST_VOICE_COMMIT }}
 
       - name: Build Assets
         run: |
