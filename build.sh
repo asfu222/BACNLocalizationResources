@@ -20,13 +20,22 @@ if [ ! -f "../assetsBuildSrc/scenariovoice/latest/MediaResources/GameData/voice_
 fi
 find ../assets -type d -path '*/buildSrc/Excel' | while read -r d; do
   out=$(echo "$d" | sed 's|/buildSrc/Excel/*$|/Excel.zip|')
-  echo ../Excel.zip "$d" "$out"
-  $PYTHON_CMD build_excel_zip.py ../Excel.zip "$d" "$out"
+  if [ ! -f "$out" ]; then
+    echo ../Excel.zip "$d" "$out"
+    $PYTHON_CMD build_excel_zip.py ../Excel.zip "$d" "$out"
+  else
+    echo "Skipping: $out already exists"
+  fi
 done
+
 find ../assets -type d -path '*/buildSrc/ExcelDB' | while read -r d; do
   out=$(echo "$d" | sed 's|/buildSrc/ExcelDB/*$|/ExcelDB.db|')
-  echo ../assetsBuildSrc/scenariovoice/latest/MediaResources/GameData/voice_file_names.json ../ExcelDB.db "$d" "$out"
-  $PYTHON_CMD build_excel_db.py ../assetsBuildSrc/scenariovoice/latest/MediaResources/GameData/voice_file_names.json ../ExcelDB.db "$d" "$out"
+  if [ ! -f "$out" ]; then
+    echo ../assetsBuildSrc/scenariovoice/latest/MediaResources/GameData/voice_file_names.json ../ExcelDB.db "$d" "$out"
+    $PYTHON_CMD build_excel_db.py ../assetsBuildSrc/scenariovoice/latest/MediaResources/GameData/voice_file_names.json ../ExcelDB.db "$d" "$out"
+  else
+    echo "Skipping: $out already exists"
+  fi
 done
 cd ..
 find ./assets -type d -path "*/buildSrc/Excel" -exec rm -rf {} +
