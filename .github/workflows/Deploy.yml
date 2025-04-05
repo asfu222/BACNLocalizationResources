@@ -144,21 +144,27 @@ jobs:
             sudo pkill openresty
             sudo openresty -s quit -c /home/ubuntu/nginx_redirect_server/nginx.conf | sudo openresty -c /home/ubuntu/nginx_redirect_server/nginx.conf
           "
-      - name: Deploy to Cloudflare R2
-        env: 
+      - name: Install rclone
+        run: |
+          curl https://rclone.org/install.sh | bash
+      
+      - name: Configure rclone
+        run: |
+          mkdir -p ~/.config/rclone
+          echo "[r2]
+           type = s3
+           provider = Cloudflare
+           env_auth = true
+           endpoint = ${{ secrets.R2_ENDPOINT }}
+           acl = public-read" > ~/.config/rclone/rclone.conf
+      
+      - name: Upload files to R2 without aws-chunked
+        env:
           AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
-          AWS_DEFAULT_REGION: auto
-          AWS_ENDPOINT_URL: ${{ secrets.R2_ENDPOINT }}
-          AWS_MAX_ATTEMPTS: 5
-        run: aws s3 sync assets/ s3://bluearchive/ --checksum-algorithm CRC32
-        
-      - name: Purge Cloudflare Cache
         run: |
-          curl -X POST "https://api.cloudflare.com/client/v4/zones/${{ secrets.CF_ZONE_ID }}/purge_cache" \
-             -H "Authorization: Bearer ${{ secrets.CF_PURGE_TOKEN }}" \
-             -H "Content-Type: application/json" \
-             --data '{"purge_everything":true}'
+          rclone copy assets/ r2:bluearchive --s3-upload-cutoff 0 --s3-chunk-size 0 --s3-disable-checksum
+
           
       #- name: Check if should deploy
       #  id: check_deploy
