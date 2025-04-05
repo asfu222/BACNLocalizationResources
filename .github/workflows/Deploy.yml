@@ -162,23 +162,21 @@ jobs:
         run: |
           curl https://rclone.org/install.sh | sudo bash
       
-      - name: Configure rclone
+      - name: Configure rclone for Cloudflare R2
         run: |
-          mkdir -p ~/.config/rclone
-          echo "[r2]
-           type = s3
-           provider = Cloudflare
-           env_auth = true
-           endpoint = ${{ secrets.R2_ENDPOINT }}
-           acl = public-read" > ~/.config/rclone/rclone.conf
-      
-      - name: Upload files to R2 without aws-chunked
+          rclone config create r2 s3 provider=Cloudflare env_auth=true endpoint=${{ secrets.R2_ENDPOINT }} acl=public-read
+      - name: Configure rclone for Backblaze B2 (non-interactive)
+        run: |
+            rclone config create b2 b2 account=${{ secrets.B2_KEY_ID }} key=${{ secrets.B2_APP_KEY }}
+      - name: Upload files to Cloudflare R2 without aws-chunked
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
         run: |
           rclone copy assets/ r2:bluearchive --s3-upload-cutoff 1G --s3-chunk-size 5M --s3-disable-checksum
-
+      - name: Upload files to Backblaze B2 without chunking
+        run: |
+          rclone copy assets/ b2:bluearchive --s3-upload-cutoff 1G --s3-chunk-size 5M --s3-disable-checksum
           
       #- name: Check if should deploy
       #  id: check_deploy
