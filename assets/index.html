@@ -85,21 +85,27 @@
 </head>
 <body>
     <div class="container">
-		<a href="catalog.html" class="button">前往文件资源库</a>
+        <a href="catalog.html" class="button">前往文件资源库</a>
         <a href="https://github.com/asfu222/BACNLocalizationResources/raw/refs/heads/main/DNSConfig.mobileconfig" class="button">下载DNS设置</a>
         <a href="https://prod-clientpatch.bluearchive.me:8080/cert.crt" class="button">下载证书</a>
-		<button class = "button" onclick="toggleUseMITM()">查看MITM劫持状态（iOS）</button>
-		<button class = "button" onclick="toggleShouldUpdate()">云更新开关</button>
-		<button class="button" onclick="openLocalizationModal()">输入本地化组</button>
+        <button class="button" onclick="toggleUseMITM()">查看MITM劫持状态（iOS）</button>
+        <button class="button" onclick="toggleShouldUpdate()">云更新开关</button>
+        <button class="button" onclick="openLocalizationModal()">输入本地化组</button>
+        <!-- New button to change 中转服务器 -->
+        <button class="button" onclick="openEdgeProxyModal()">修改中转服务器</button>
     </div>
-	<span id="shouldUpdateDisplay" style="font-size: 16px;"></span>
+    <span id="shouldUpdateDisplay" style="font-size: 16px;"></span>
     <span id="connectedDisplay" style="font-size: 16px;"></span>
+
+    <!-- DNS Prompt Modal -->
     <div id="dnsPromptModal" class="modal">
         <div class="modal-content">
             <p>请先连接到DNS并设“蔚蓝档案汉化”为Root证书！</p>
             <button onclick="closeDnsModal()">关闭</button>
         </div>
     </div>
+
+    <!-- Localization Input Modal -->
     <div id="localizationInputModal" class="modal">
         <div class="modal-content">
             <h2>输入本地化组</h2>
@@ -108,20 +114,34 @@
             <button onclick="closeLocalizationModal()">关闭</button>
         </div>
     </div>
+
+    <!-- 中转服务器 Input Modal -->
+    <div id="edgeProxyModal" class="modal">
+        <div class="modal-content">
+            <h2>修改中转服务器</h2>
+            <input type="text" id="edgeProxyInput" placeholder="输入新的中转服务器 URL" />
+            <button onclick="submitEdgeProxy()">提交</button>
+            <button onclick="closeEdgeProxyModal()">关闭</button>
+        </div>
+    </div>
+
+    <!-- Success Modal -->
     <div id="successModal" class="modal">
         <div class="modal-content">
             <h2>成功！</h2>
-            <p>本地化组已成功更新。</p>
+            <p>操作成功。</p>
             <button onclick="closeSuccessModal()">关闭</button>
         </div>
     </div>
+
+    <!-- Error Modal -->
     <div id="errorModal" class="modal">
         <div class="modal-content">
             <p id="errorMessage"></p>
             <button onclick="closeErrorModal()">关闭</button>
         </div>
     </div>
-    </div>
+
     <div class="icons">
         <a href="https://github.com/asfu222/BACNLocalizationResources" target="_blank">
             <img src="https://www.github.com/favicon.ico" class="icon" alt="GitHub">
@@ -130,94 +150,133 @@
             <img src="https://www.bilibili.com/favicon.ico" class="icon" alt="Bilibili">
         </a>
     </div>
+
     <script>
-	    let use_mitm = false;
-	    let server_up = false;
-		let should_update = false;
-		let serverLocalizationGroups = [];
-		let availableLocalizationGroups = [];
+        let use_mitm = false;
+        let server_up = false;
+        let should_update = false;
+        let serverLocalizationGroups = [];
+        let availableLocalizationGroups = [];
+        let currentEdgeProxy = "";
+
         function checkServerStatus(callback) {
-			if (server_up === true) {
-				callback();
-				return;
-			}
+            if (server_up === true) {
+                callback();
+                return;
+            }
             fetch(`https://prod-clientpatch.bluearchive${use_mitm ? "yostar.com" : ".me:6969"}/get_status`)
                 .then(response => response.json())
                 .then(data => {
                     server_up = data.status === "OK";
-					should_update = data.shouldUpdate;
-					serverLocalizationGroups = data.localizationGroups;
-					if (availableLocalizationGroups.length == 0) {
-						fetch("https://prod-clientpatch.bluearchive.me:6969/get_available_localization_groups").then(response => response.json())
-						.then(data => {
-							if (data.status === "OK") {
-							  availableLocalizationGroups = data.availableGroups;
-							}
-						})
-					}
+                    should_update = data.shouldUpdate;
+                    serverLocalizationGroups = data.localizationGroups;
+                    currentEdgeProxy = data.edgeProxy;
+                    if (availableLocalizationGroups.length == 0) {
+                        fetch("https://prod-clientpatch.bluearchive.me:6969/get_available_localization_groups")
+                            .then(response => response.json())
+                            .then(data => {
+                                if (data.status === "OK") {
+                                    availableLocalizationGroups = data.availableGroups;
+                                }
+                            });
+                    }
                     callback();
                 })
                 .catch(e => {
-					console.error(e);
+                    console.error(e);
                     callback();
                 });
         }
-		function toggleUseMITM() {
-		    use_mitm = !use_mitm;
-			server_up = false;
-			checkServerStatus(updateUI);
-		}
-		
-        function updateUI() {
-			document.getElementById("connectedDisplay").textContent = `服务器状态：${server_up ? "已连接" : "未连接"}`;
-			document.getElementById("shouldUpdateDisplay").textContent = `云更新：${should_update ? "已开启" : "未开启"}`;
-			if (!server_up && use_mitm) {
-				showDnsModal();
-			} else {
-				closeDnsModal();
-			}
+
+        // Toggle MITM setting
+        function toggleUseMITM() {
+            use_mitm = !use_mitm;
+            server_up = false;
+            checkServerStatus(updateUI);
         }
-		function toggleShouldUpdate() {
-		    if (!server_up) return;
-			fetch("https://prod-clientpatch.bluearchive.me:6969/toggle_update")
-                .then(response => response.json())
-                .then(data => {
-                    if (data.status === "OK") {
-						should_update = data.newValue;
-						updateUI();
-					}
-                })
-                .catch(console.error);
-		}
+
+        // Update UI based on server status
+        function updateUI() {
+            document.getElementById("connectedDisplay").textContent = `服务器状态：${server_up ? "已连接" : "未连接"}`;
+            document.getElementById("shouldUpdateDisplay").textContent = `云更新：${should_update ? "已开启" : "未开启"}`;
+            if (!server_up && use_mitm) {
+                showDnsModal();
+            } else {
+                closeDnsModal();
+            }
+        }
+
+        // Show the DNS modal
         function showDnsModal() {
             document.getElementById("dnsPromptModal").style.display = "flex";
         }
         function closeDnsModal() {
             document.getElementById("dnsPromptModal").style.display = "none";
         }
-		
+
+        // Localization Modal Handling
         function openLocalizationModal() {
             if (server_up) {
-				document.getElementById('localizationInput').value = serverLocalizationGroups.join(',');
+                document.getElementById('localizationInput').value = serverLocalizationGroups.join(',');
                 document.getElementById('localizationInputModal').style.display = 'flex';
             } else {
                 alert('Server is not up. Please try again later.');
             }
         }
-		
         function closeLocalizationModal() {
             document.getElementById('localizationInputModal').style.display = 'none';
         }
 
-        function closeErrorModal() {
-            document.getElementById('errorModal').style.display = 'none';
+        function openEdgeProxyModal() {
+            if (server_up) {
+                document.getElementById('edgeProxyInput').value = currentEdgeProxy;
+                document.getElementById('edgeProxyModal').style.display = 'flex';
+            } else {
+                alert('Server is not up. Please try again later.');
+            }
+        }
+
+        function closeEdgeProxyModal() {
+            document.getElementById('edgeProxyModal').style.display = 'none';
+        }
+
+        function submitEdgeProxy() {
+            const edgeProxy = document.getElementById('edgeProxyInput').value.trim();
+            if (!edgeProxy) {
+                showErrorModal('请输入有效的中转服务器 URL。');
+                return;
+            }
+ 			if (edgeProxy == currentEdgeProxy) {
+				closeEdgeProxyModal();
+				return;
+			}
+            const data = {
+                edgeProxy: edgeProxy
+            };
+
+            fetch('https://prod-clientpatch.bluearchive.me:6969/change_edge_proxy', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data),
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === "OK") {
+                    showSuccessModal();
+                    currentEdgeProxy = edgeProxy;
+                    closeEdgeProxyModal();
+                } else {
+                    showErrorModal(data.error || '操作失败');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showErrorModal('An error occurred while processing your request.');
+            });
         }
 		
-		function closeSuccessModal() {
-            document.getElementById('successModal').style.display = 'none';
-        }
-
-
 		function submitLocalization() {
             const input = document.getElementById('localizationInput').value.replace(/，/g, ",");
 			if (input == serverLocalizationGroups.join(',')) {
@@ -258,21 +317,32 @@
             });
         }
 
+        // Success Modal Handling
+        function showSuccessModal() {
+            document.getElementById('successModal').style.display = 'flex';
+        }
+        function closeSuccessModal() {
+            document.getElementById('successModal').style.display = 'none';
+        }
+
+        // Error Modal Handling
         function showErrorModal(message) {
             document.getElementById('errorMessage').innerText = message;
             document.getElementById('errorModal').style.display = 'flex';
         }
-		function showSuccessModal() {
-            document.getElementById('successModal').style.display = 'flex';
+        function closeErrorModal() {
+            document.getElementById('errorModal').style.display = 'none';
         }
-		window.onload = function() {
-			checkServerStatus(updateUI);
-		};
-		document.addEventListener('visibilitychange', function() {
-			if (!document.hidden) {
-				checkServerStatus(updateUI);
-			}
-		});
+
+        // Initialize on page load
+        window.onload = function() {
+            checkServerStatus(updateUI);
+        };
+        document.addEventListener('visibilitychange', function() {
+            if (!document.hidden) {
+                checkServerStatus(updateUI);
+            }
+        });
     </script>
 </body>
 </html>
