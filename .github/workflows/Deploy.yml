@@ -156,7 +156,6 @@ jobs:
           ssh ubuntu@prod-clientpatch.bluearchive.me "
             cd /home/ubuntu/nginx_redirect_server/
             sudo openresty -s quit -c /home/ubuntu/nginx_redirect_server/nginx.conf || sudo pkill openresty && sudo openresty -c /home/ubuntu/nginx_redirect_server/nginx.conf
-            ./clear-edge-cache.sh > clear-edge-cache.log
           "
       - name: Install rclone
         run: |
@@ -171,7 +170,18 @@ jobs:
           AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
         run: |
           rclone copy assets/ r2:bluearchive --s3-upload-cutoff 1G --s3-chunk-size 5M --s3-disable-checksum
-          
+      - name: Purge Cloudflare Cache
+        run: |
+          curl -X POST "https://api.cloudflare.com/client/v4/zones/${{ secrets.CF_ZONE_ID }}/purge_cache" \
+             -H "Authorization: Bearer ${{ secrets.CF_PURGE_TOKEN }}" \
+             -H "Content-Type: application/json" \
+             --data '{"purge_everything":true}'  
+      - name: Purge Edge Servers Cache
+        run: |
+          ssh ubuntu@prod-clientpatch.bluearchive.me "
+            cd /home/ubuntu/nginx_redirect_server/
+            ./clear-edge-cache.sh > clear-edge-cache.log
+          "
       #- name: Check if should deploy
       #  id: check_deploy
       #  run: |
