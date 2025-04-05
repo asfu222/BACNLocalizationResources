@@ -156,6 +156,7 @@ jobs:
           ssh ubuntu@prod-clientpatch.bluearchive.me "
             cd /home/ubuntu/nginx_redirect_server/
             sudo openresty -s quit -c /home/ubuntu/nginx_redirect_server/nginx.conf || sudo pkill openresty && sudo openresty -c /home/ubuntu/nginx_redirect_server/nginx.conf
+            ./clear-edge-cache.sh > clear-edge-cache.log
           "
       - name: Install rclone
         run: |
