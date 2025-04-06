@@ -87,11 +87,11 @@
     <div class="container">
         <a href="catalog.html" class="button">前往文件资源库</a>
         <a href="https://github.com/asfu222/BACNLocalizationResources/raw/refs/heads/main/DNSConfig.mobileconfig" class="button">下载DNS设置</a>
+		<a href="https://cdn.bluearchive.me/apk/蔚蓝档案.apk" class = "button">下载最新安卓客户端（APK）</a>
         <a href="https://prod-clientpatch.bluearchive.me:8080/cert.crt" class="button">下载证书</a>
         <button class="button" onclick="toggleUseMITM()">查看MITM劫持状态（iOS）</button>
         <button class="button" onclick="toggleShouldUpdate()">云更新开关</button>
         <button class="button" onclick="openLocalizationModal()">输入本地化组</button>
-        <!-- New button to change 中转服务器 -->
         <button class="button" onclick="openEdgeProxyModal()">修改中转服务器</button>
     </div>
     <span id="shouldUpdateDisplay" style="font-size: 16px;"></span>
@@ -115,7 +115,6 @@
         </div>
     </div>
 
-    <!-- 中转服务器 Input Modal -->
     <div id="edgeProxyModal" class="modal">
         <div class="modal-content">
             <h2>修改中转服务器</h2>
@@ -197,7 +196,7 @@
 
         // Update UI based on server status
         function updateUI() {
-            document.getElementById("connectedDisplay").textContent = `服务器状态：${server_up ? "已连接" : "未连接"}`;
+            document.getElementById("connectedDisplay").textContent = `服务器${use_mitm ? "（DNS拦截）": ""}状态：${server_up ? "已连接" : "未连接"}`;
             document.getElementById("shouldUpdateDisplay").textContent = `云更新：${should_update ? "已开启" : "未开启"}`;
             if (!server_up && use_mitm) {
                 showDnsModal();
