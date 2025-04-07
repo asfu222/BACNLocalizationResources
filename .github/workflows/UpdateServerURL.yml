@@ -45,22 +45,14 @@ jobs:
             echo "检测到悠星服务器URL更新，正在更新ba.env网址..."
             echo "update_detected=true" >> $GITHUB_ENV
           fi
-      - name: Push updated server json
-        env:
-          TARGET_REPO_URL: https://x-access-token:${{ secrets.SERVER_INFO_REPO }}@github.com/asfu222/serverinfo.git
+      - name: Push updated server info JSON
         run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.REDIRECT_SERVER_SSH_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H prod-clientpatch.bluearchive.me >> ~/.ssh/known_hosts
           sed -i 's|https://prod-clientpatch.bluearchiveyostar.com/|https://prod-clientpatch.bluearchive.me/|g' server-info.json
-          git clone "$TARGET_REPO_URL" serverinfo
-          cp server-info.json serverinfo/
-          cd serverinfo
-          git add server-info.json
-          if git diff --cached --quiet; then
-            echo "没有检测到更新，跳过提交"
-          else
-            echo "检测到服务器信息更新，正在更新..."
-            git commit -m "更新服务器信息"
-            git push origin
-          fi
+          scp server-info.json ubuntu@prod-clientpatch.bluearchive.me:/home/ubuntu/nginx_redirect_server/server_cfg/server-info.json
       - name: Commit and push changes if ba.env was modified
         if: env.update_detected == 'true'
         run: |
