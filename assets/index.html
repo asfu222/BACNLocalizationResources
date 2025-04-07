@@ -87,8 +87,8 @@
         <div class="container">
             <a href="catalog.html" class="button">前往文件资源库</a>
             <a href="apk/蔚蓝档案.apk" class = "button">下载安卓客户端（APK）</a>
-            <a href="https://github.com/asfu222/BACNLocalizationResources/raw/refs/heads/main/DNSConfig.mobileconfig" class="button">下载DNS设置</a>
-            <a href="https://prod-clientpatch.bluearchive.me:8080/cert.crt" class="button">下载证书</a>
+            <a href="https://raw.githubusercontent.com/asfu222/BACNLocalizationResources/refs/heads/main/DNSConfig.mobileconfig" class="button">下载DNS设置</a>
+            <a href="https://ca.bluearchive.me/cert.crt" class="button">下载证书</a>
             <button class="button" onclick="toggleUseMITM()">查看MITM劫持状态（iOS）</button>
             <button class="button" onclick="toggleShouldUpdate()">云更新开关</button>
             <button class="button" onclick="openLocalizationModal()">输入本地化组</button>
@@ -163,7 +163,7 @@
                     callback();
                     return;
                 }
-                fetch(`https://prod-clientpatch.bluearchive${use_mitm ? "yostar.com" : ".me:6969"}/get_status`)
+                fetch(`https://prod-clientpatch.bluearchive${use_mitm ? "yostar.com" : ".me"}/get_status`)
                     .then(response => response.json())
                     .then(data => {
                         server_up = data.status === "OK";
@@ -171,7 +171,7 @@
                         serverLocalizationGroups = data.localizationGroups;
                         currentEdgeProxy = data.edgeProxy;
                         if (availableLocalizationGroups.length == 0) {
-                            fetch("https://prod-clientpatch.bluearchive.me:6969/get_available_localization_groups")
+                            fetch("https://prod-clientpatch.bluearchive.me/get_available_localization_groups")
                                 .then(response => response.json())
                                 .then(data => {
                                     if (data.status === "OK") {
@@ -253,7 +253,7 @@
                     edgeProxy: edgeProxy
                 };
     
-                fetch('https://prod-clientpatch.bluearchive.me:6969/change_edge_proxy', {
+                fetch('https://prod-clientpatch.bluearchive.me/change_edge_proxy', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -293,7 +293,7 @@
                 const data = {
                     localizationGroups: localizationGroups
                 };
-                fetch('https://prod-clientpatch.bluearchive.me:6969/change_localization_groups', {
+                fetch('https://prod-clientpatch.bluearchive.me/change_localization_groups', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -337,7 +337,7 @@
     				updateUI();
     				return;
     			}
-    			fetch("https://prod-clientpatch.bluearchive.me:6969/toggle_update")
+    			fetch("https://prod-clientpatch.bluearchive.me/toggle_update")
                     .then(response => response.json())
                     .then(data => {
                         if (data.status === "OK") {
