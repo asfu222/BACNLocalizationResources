@@ -49,7 +49,7 @@ jobs:
         env:
           TARGET_REPO_URL: https://x-access-token:${{ secrets.SERVER_INFO_REPO }}@github.com/asfu222/serverinfo.git
         run: |
-          sed -i 's|https://prod-clientpatch.bluearchiveyostar.com/|https://prod-clientpatch.bluearchive.me:6969/|g' server-info.json
+          sed -i 's|https://prod-clientpatch.bluearchiveyostar.com/|https://prod-clientpatch.bluearchive.me/|g' server-info.json
           git clone "$TARGET_REPO_URL" serverinfo
           cp server-info.json serverinfo/
           cd serverinfo
