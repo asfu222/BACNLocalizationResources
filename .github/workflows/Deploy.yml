@@ -113,14 +113,14 @@ jobs:
         with:
           path: |
             assets/beicheng/latest/TableBundles/Excel.zip
-          key: ${{ runner.os }}-built_excelzip-${{ hashFiles('assets/beicheng/latest/TableBundles/buildSrc/Excel/*') }}
+          key: ${{ runner.os }}-built_excelzip-${{ hashFiles('assets/beicheng/latest/TableBundles/buildSrc/Excel/*') }}-${{ hashFiles('Excel.zip') }}
 
       - name: Restore ExcelDB.db Build Cache
         uses: actions/cache@v4
         with:
           path: |
             assets/beicheng/latest/TableBundles/ExcelDB.db
-          key: ${{ runner.os }}-built_exceldb-${{ hashFiles('assets/beicheng/latest/TableBundles/buildSrc/ExcelDB/*') }}-${{ env.LATEST_VOICE_COMMIT }}
+          key: ${{ runner.os }}-built_exceldb-${{ hashFiles('assets/beicheng/latest/TableBundles/buildSrc/ExcelDB/*') }}-${{ env.LATEST_VOICE_COMMIT }}-${{ hashFiles('ExcelDB.db') }}
 
       - name: Build Assets
         run: |
