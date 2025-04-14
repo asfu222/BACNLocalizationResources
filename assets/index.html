@@ -86,11 +86,10 @@
     <body>
         <div class="container">
             <a href="catalog.html" class="button">前往文件资源库</a>
+            <a href="https://dashboard.bluearchive.me" class = "button">前往控制台</a>
             <a href="apk/蔚蓝档案.apk" class = "button">下载安卓客户端（APK）</a>
             <a href="https://ca.bluearchive.me/cert.crt" class="button">下载证书</a>
             <button class="button" onclick="toggleUseMITM()">查看MITM劫持状态（iOS）</button>
-            <button class="button" onclick="openLocalizationModal()">输入本地化组</button>
-            <button class="button" onclick="openEdgeProxyModal()">修改中转服务器</button>
         </div>
         <span id="connectedDisplay" style="font-size: 16px;"></span>
     
@@ -99,42 +98,6 @@
             <div class="modal-content">
                 <p>请先连接到DNS并设“蔚蓝档案汉化”为Root证书！</p>
                 <button onclick="closeDnsModal()">关闭</button>
-            </div>
-        </div>
-    
-        <!-- Localization Input Modal -->
-        <div id="localizationInputModal" class="modal">
-            <div class="modal-content">
-                <h2>输入本地化组</h2>
-                <input type="text" id="localizationInput" placeholder="输入本地化组，以逗号分隔">
-                <button onclick="submitLocalization()">提交</button>
-                <button onclick="closeLocalizationModal()">关闭</button>
-            </div>
-        </div>
-    
-        <div id="edgeProxyModal" class="modal">
-            <div class="modal-content">
-                <h2>修改中转服务器</h2>
-                <input type="text" id="edgeProxyInput" placeholder="输入新的中转服务器 URL" />
-                <button onclick="submitEdgeProxy()">提交</button>
-                <button onclick="closeEdgeProxyModal()">关闭</button>
-            </div>
-        </div>
-    
-        <!-- Success Modal -->
-        <div id="successModal" class="modal">
-            <div class="modal-content">
-                <h2>成功！</h2>
-                <p>操作成功。</p>
-                <button onclick="closeSuccessModal()">关闭</button>
-            </div>
-        </div>
-    
-        <!-- Error Modal -->
-        <div id="errorModal" class="modal">
-            <div class="modal-content">
-                <p id="errorMessage"></p>
-                <button onclick="closeErrorModal()">关闭</button>
             </div>
         </div>
     
@@ -150,9 +113,6 @@
         <script>
             let use_mitm = false;
             let server_up = false;
-            let serverLocalizationGroups = [];
-            let availableLocalizationGroups = [];
-            let currentEdgeProxy = "";
     
             function checkServerStatus(callback) {
                 if (server_up === true) {
@@ -163,17 +123,6 @@
                     .then(response => response.json())
                     .then(data => {
                         server_up = data.status === "OK";
-                        serverLocalizationGroups = data.localizationGroups;
-                        currentEdgeProxy = data.edgeProxy;
-                        if (availableLocalizationGroups.length == 0) {
-                            fetch("https://prod-clientpatch.bluearchive.me/get_available_localization_groups")
-                                .then(response => response.json())
-                                .then(data => {
-                                    if (data.status === "OK") {
-                                        availableLocalizationGroups = data.availableGroups;
-                                    }
-                                });
-                        }
                         callback();
                     })
                     .catch(e => {
@@ -205,126 +154,6 @@
             }
             function closeDnsModal() {
                 document.getElementById("dnsPromptModal").style.display = "none";
-            }
-    
-            // Localization Modal Handling
-            function openLocalizationModal() {
-                if (server_up) {
-                    document.getElementById('localizationInput').value = serverLocalizationGroups.join(',');
-                    document.getElementById('localizationInputModal').style.display = 'flex';
-                } else {
-                    alert('Server is not up. Please try again later.');
-                }
-            }
-            function closeLocalizationModal() {
-                document.getElementById('localizationInputModal').style.display = 'none';
-            }
-    
-            function openEdgeProxyModal() {
-                if (server_up) {
-                    document.getElementById('edgeProxyInput').value = currentEdgeProxy;
-                    document.getElementById('edgeProxyModal').style.display = 'flex';
-                } else {
-                    alert('Server is not up. Please try again later.');
-                }
-            }
-    
-            function closeEdgeProxyModal() {
-                document.getElementById('edgeProxyModal').style.display = 'none';
-            }
-    
-            function submitEdgeProxy() {
-                const edgeProxy = document.getElementById('edgeProxyInput').value.trim();
-                if (!edgeProxy) {
-                    showErrorModal('请输入有效的中转服务器 URL。');
-                    return;
-                }
-     			if (edgeProxy == currentEdgeProxy) {
-    				closeEdgeProxyModal();
-    				return;
-    			}
-                const data = {
-                    edgeProxy: edgeProxy
-                };
-    
-                fetch('https://prod-clientpatch.bluearchive.me/change_edge_proxy', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(data),
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.status === "OK") {
-                        showSuccessModal();
-                        currentEdgeProxy = edgeProxy;
-                        closeEdgeProxyModal();
-                    } else {
-                        showErrorModal(data.error || '操作失败');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    showErrorModal('An error occurred while processing your request.');
-                });
-            }
-    		
-    		function submitLocalization() {
-                const input = document.getElementById('localizationInput').value.replace(/，/g, ",");
-    			if (input == serverLocalizationGroups.join(',')) {
-    				closeLocalizationModal();
-    				return;
-    			}
-                const localizationGroups = input.split(',').map(group => group.trim());
-                for (let group of localizationGroups) {
-                    if (!availableLocalizationGroups.includes(group)) {
-                        showErrorModal('输入的本地化组无效。');
-                        return;
-                    }
-                }
-    
-                const data = {
-                    localizationGroups: localizationGroups
-                };
-                fetch('https://prod-clientpatch.bluearchive.me/change_localization_groups', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(data),
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.error) {
-                        showErrorModal(data.error);
-                    } else {
-                        showSuccessModal();
-    					serverLocalizationGroups = localizationGroups;
-                        closeLocalizationModal();
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    showErrorModal('An error occurred while processing your request.');
-                });
-            }
-    
-            // Success Modal Handling
-            function showSuccessModal() {
-                document.getElementById('successModal').style.display = 'flex';
-            }
-            function closeSuccessModal() {
-                document.getElementById('successModal').style.display = 'none';
-            }
-    
-            // Error Modal Handling
-            function showErrorModal(message) {
-                document.getElementById('errorMessage').innerText = message;
-                document.getElementById('errorModal').style.display = 'flex';
-            }
-            function closeErrorModal() {
-                document.getElementById('errorModal').style.display = 'none';
             }
             // Initialize on page load
             window.onload = function() {
