@@ -182,7 +182,7 @@ jobs:
           ssh ubuntu@prod-clientpatch.bluearchive.me "
           cd /home/ubuntu/nginx_redirect_server/ &&
           nohup timeout 600 ./clear-edge-cache.sh > clear-edge-cache.log 2>&1 &
-        "
+          "
       #- name: Check if should deploy
       #  id: check_deploy
       #  run: |
