@@ -3,6 +3,7 @@ import os
 from pathlib import Path
 import subprocess
 import binascii
+import re
 def strip_crc(filename: str) -> str:
     m = re.match(r"^(.+?_)(\d+)(\.[^.]+)$", filename)
     return f"{m.group(1)}{m.group(3)}" if m else filename
