@@ -52,6 +52,7 @@ def apply_patch(platform: str):
             new_name = f"{prefix}_{new_crc}.{suffix}"
             new_path = asset.with_name(new_name)
             asset.rename(new_path)
+            print(f"new_name: {new_name}, asset.name: {asset.name}")
             
             # Take the first match
             entry = matches[0]
