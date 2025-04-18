@@ -165,12 +165,16 @@ jobs:
       - name: Configure rclone for Cloudflare R2
         run: |
           rclone config create r2 s3 provider=Cloudflare env_auth=true endpoint=${{ secrets.R2_ENDPOINT }} acl=public-read
-      - name: Upload files to Cloudflare R2 without aws-chunked
+      - name: Sync to Cloudflare R2
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
         run: |
-          rclone copy assets/ r2:bluearchive --s3-upload-cutoff 1G --s3-chunk-size 5M --s3-disable-checksum
+          rclone sync assets/ r2:bluearchive \
+            --s3-upload-cutoff 1G \
+            --s3-chunk-size 5M \
+            --s3-disable-checksum \
+            --exclude "apk/**"
       - name: Purge Cloudflare Cache
         run: |
           curl -X POST "https://api.cloudflare.com/client/v4/zones/${{ secrets.CF_ZONE_ID }}/purge_cache" \
