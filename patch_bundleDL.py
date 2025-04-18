@@ -48,7 +48,7 @@ def apply_patch(platform: str):
             if not matches:
                 print(f"No matching entry for {asset.name}, skipping")
                 continue
-            prefix, suffix = stripped_name.rsplit(".", 1)
+            prefix, suffix = key.rsplit(".", 1)
             new_name = f"{prefix}_{new_crc}.{suffix}"
             new_path = asset.with_name(new_name)
             asset.rename(new_path)
