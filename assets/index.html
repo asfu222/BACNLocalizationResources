@@ -98,16 +98,6 @@
             <a href="https://dashboard.bluearchive.me" class = "button">前往控制台</a>
             <a href="apk/蔚蓝档案.apk" class = "button">下载安卓客户端（APK）</a>
             <a href="https://ca.bluearchive.me/cert.crt" class="button">下载证书</a>
-            <button class="button" onclick="toggleUseMITM()">查看MITM劫持状态（iOS）</button>
-        </div>
-        <span id="connectedDisplay" style="font-size: 16px;"></span>
-    
-        <!-- DNS Prompt Modal -->
-        <div id="dnsPromptModal" class="modal">
-            <div class="modal-content">
-                <p>请先连接到DNS并设“蔚蓝档案汉化”为Root证书！</p>
-                <button onclick="closeDnsModal()">关闭</button>
-            </div>
         </div>
     
         <div class="icons">
@@ -118,61 +108,5 @@
                 <img src="https://www.bilibili.com/favicon.ico" class="icon" alt="Bilibili">
             </a>
         </div>
-    
-        <script>
-            let use_mitm = false;
-            let server_up = false;
-    
-            function checkServerStatus(callback) {
-                if (server_up === true) {
-                    callback();
-                    return;
-                }
-                fetch(`https://prod-clientpatch.bluearchive${use_mitm ? "yostar.com" : ".me"}/get_status`)
-                    .then(response => response.json())
-                    .then(data => {
-                        server_up = data.status === "OK";
-                        callback();
-                    })
-                    .catch(e => {
-                        console.error(e);
-                        callback();
-                    });
-            }
-    
-            // Toggle MITM setting
-            function toggleUseMITM() {
-                use_mitm = !use_mitm;
-                server_up = false;
-                checkServerStatus(updateUI);
-            }
-    
-            // Update UI based on server status
-            function updateUI() {
-                document.getElementById("connectedDisplay").textContent = `服务器${use_mitm ? "（DNS拦截）": ""}状态：${server_up ? "已连接" : "未连接"}`;
-                if (!server_up && use_mitm) {
-                    showDnsModal();
-                } else {
-                    closeDnsModal();
-                }
-            }
-    
-            // Show the DNS modal
-            function showDnsModal() {
-                document.getElementById("dnsPromptModal").style.display = "flex";
-            }
-            function closeDnsModal() {
-                document.getElementById("dnsPromptModal").style.display = "none";
-            }
-            // Initialize on page load
-            window.onload = function() {
-                checkServerStatus(updateUI);
-            };
-            document.addEventListener('visibilitychange', function() {
-                if (!document.hidden) {
-                    checkServerStatus(updateUI);
-                }
-            });
-        </script>
     </body>
     </html>
