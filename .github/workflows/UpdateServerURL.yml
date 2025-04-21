@@ -2,7 +2,7 @@ name: Update Yostar Server URL
 
 on:
   schedule:
-    - cron: "0 3,5,7 * * *"
+    - cron: "0 * * * *"
   workflow_dispatch:
 permissions:
   contents: write
