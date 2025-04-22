@@ -10,15 +10,14 @@ download_file() {
 
     while true; do
         echo "Downloading: $url"
-        curl -s -o "$output" "$url"
+        http_status=$(curl -s -w "%{http_code}" -o "$output" "$url")
 
-        # Check if the download was successful and file is not empty
-        if [ $? -eq 0 ] && [ -s "$output" ]; then
+        if [ "$http_status" -eq 200 ] && [ -s "$output" ]; then
             echo "Downloaded: $output"
             break
         else
-            echo "Download failed or file is empty: $url"
-            rm -f "$output" # Remove empty or invalid file
+            echo "Download failed with status $http_status or file is empty: $url"
+            rm -f "$output"
             echo "Retrying in 60 seconds..."
             sleep 60
         fi
