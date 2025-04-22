@@ -17,9 +17,7 @@ download_file() {
             break
         else
             echo "Download failed with status $http_status or file is empty: $url"
-            rm -f "$output"
-            echo "Retrying in 60 seconds..."
-            sleep 60
+            exit 1
         fi
     done
 }
