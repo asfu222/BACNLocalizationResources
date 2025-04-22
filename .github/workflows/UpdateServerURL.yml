@@ -100,7 +100,8 @@ jobs:
           else
             echo "Deploy workflow succeeded or was canceled."
             echo "deploy_retry_needed=false" >> $GITHUB_ENV
-
+          fi
+          
       - name: Trigger Deploy.yml workflow if previous run failed
         if: env.deploy_retry_needed == 'true'
         run: |
