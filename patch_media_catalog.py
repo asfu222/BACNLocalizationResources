@@ -3,6 +3,7 @@ from pathlib import Path
 import binascii
 import json
 import subprocess
+PROLOGUE_ZIPS = []
 def calculate_crc32(file_path) -> int:
     with open(file_path, 'rb') as f:
         return binascii.crc32(f.read()) & 0xFFFFFFFF
@@ -10,16 +11,15 @@ with open("./MediaCatalog.json", "r", encoding="utf8") as f:
     catalog_data = json.loads(f.read())
 for asset_dir in Path('./assets').iterdir():
     media_dir = asset_dir / "latest" / "MediaResources"
+    voice_dir = media_dir / "GameData" / "Audio" / "VOC_CN"
     hasModded = False
-    for i in range(1, 1000):
-        voicepack_path = media_dir / "GameData" / "Audio" / "VOC_CN" / f"CN_Main_{i}.zip"
-        if voicepack_path.is_file():
-            catalog_data["MediaResources"][f"audio/voc_cn/cn_main_{i}/cn_main_{i}"] = {
-                "path": f"GameData\\Audio\\VOC_CN\\CN_Main_{i}.zip",
-                "file_name": f"CN_Main_{i}.zip",
+    for voicepack_path in voice_dir.rglob("*.zip"):
+        catalog_data["MediaResources"][f"audio/voc_cn/{voicepack_path.stem.lower()}/{voicepack_path.stem.lower()}"] = {
+            "path": f"GameData\\Audio\\VOC_CN\\{voicepack_path.stem}.zip",
+            "file_name": f"{voicepack_path.stem}.zip",
                 "bytes": voicepack_path.stat().st_size,
                 "crc": calculate_crc32(voicepack_path),
-                "is_prologue": True,
+                "is_prologue": voicepack_path.stem in PROLOGUE_ZIPS,
                 "is_split_download": False,
                 "media_type": 1
             }
