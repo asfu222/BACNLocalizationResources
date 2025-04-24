@@ -3,7 +3,7 @@ from pathlib import Path
 import binascii
 import json
 import subprocess
-PROLOGUE_ZIPS = []
+PROLOGUE_ZIPS = [f"CN_Main_1100{i}" for i in range(9)]
 def calculate_crc32(file_path) -> int:
     with open(file_path, 'rb') as f:
         return binascii.crc32(f.read()) & 0xFFFFFFFF
