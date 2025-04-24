@@ -23,9 +23,7 @@ for asset_dir in Path('./assets').iterdir():
                 "is_split_download": False,
                 "media_type": 1
             }
-            hasModded = True
-        else:
-            break
+        hasModded = True
     if hasModded:
         catalog_path = media_dir / "Catalog"
         catalog_path.mkdir(parents=True, exist_ok=True)
