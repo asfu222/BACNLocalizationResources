@@ -99,7 +99,6 @@ jobs:
             echo "子模块已是最新状态"
           else
             git commit -m "更新子模块指针 [skip ci]"
-            git push origin
           fi
 
       - name: Decompress Assets
@@ -136,7 +135,6 @@ jobs:
             echo "版本号已是最新"
           else
             git commit -m "更新版本号 [skip ci]"
-            git push origin
           fi
       - name: Setup SSH Key
         run: |
@@ -187,6 +185,8 @@ jobs:
           cd /home/ubuntu/nginx_redirect_server/ &&
           nohup timeout 600 ./clear-edge-cache.sh > clear-edge-cache.log 2>&1 &
           "
+      - name: Push changes
+        run: git push origin
       #- name: Check if should deploy
       #  id: check_deploy
       #  run: |
