@@ -62,7 +62,6 @@ def apply_patch(platform: str):
             entry["Name"] = asset.name
             entry["Size"] = new_size
             entry["Crc"] = new_crc
-            entry["IsPrologue"] = True
             entry["IsSplitDownload"] = False
 
             updated_names[old_name] = asset.name
