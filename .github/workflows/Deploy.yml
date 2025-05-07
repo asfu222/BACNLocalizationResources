@@ -5,6 +5,8 @@ on:
   push:
   repository_dispatch:
     types: [run-deployment]
+  schedule:
+    - cron: '0 20 */6 * *'  # Run every 6 days to refresh cache
 permissions:
   contents: write
 jobs:
