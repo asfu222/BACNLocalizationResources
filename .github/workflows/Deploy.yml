@@ -61,6 +61,7 @@ jobs:
           key: ${{ runner.os }}-scenariovoice-${{ env.LATEST_VOICE_COMMIT }}
 
       - name: Clone scenariovoice if not exist
+        if: github.event_name != 'schedule'
         run: |
           if [ ! -d "assets/scenariovoice" ]; then
             echo "Cache miss: Cloning scenariovoice..."
@@ -87,11 +88,13 @@ jobs:
         run: git submodule update --recursive --remote
         
       - name: Configure Git Identity
+        if: github.event_name != 'schedule'
         run: |
           git config --global user.name "GitHub Actions"
           git config --global user.email "actions@github.com"
 
       - name: Update Submodule References
+        if: github.event_name != 'schedule'
         run: |
           submodule_paths=$(git submodule status | awk '{ print $2 }')
           for submodule in $submodule_paths; do
@@ -104,9 +107,11 @@ jobs:
           fi
 
       - name: Decompress Assets
+        if: github.event_name != 'schedule'
         run: find ./assets -name '*.gz' -exec gzip -d {} \;
         
       - name: Cleanup git files
+        if: github.event_name != 'schedule'
         run: find ./assets -name ".git" -exec rm -rf {} +
         
       - name: Restore Excel.zip Build Cache
@@ -124,10 +129,12 @@ jobs:
           key: ${{ runner.os }}-built_exceldb-${{ hashFiles('assets/beicheng/latest/TableBundles/buildSrc/ExcelDB/*') }}-${{ env.LATEST_VOICE_COMMIT }}-${{ hashFiles('ExcelDB.db') }}
 
       - name: Build Assets
+        if: github.event_name != 'schedule'
         run: |
           chmod +x build.sh
           ./build.sh
       - name: Update version.hash
+        if: github.event_name != 'schedule'
         run: |
           mkdir -p ./assets/static/
           LATEST_COMMIT_MESSAGE=$(git log -1 --pretty=%B HEAD)
@@ -139,6 +146,7 @@ jobs:
             git commit -m "更新版本号 [skip ci]"
           fi
       - name: Setup SSH Key
+        if: github.event_name != 'schedule'
         run: |
           mkdir -p ~/.ssh
           echo "${{ secrets.REDIRECT_SERVER_SSH_KEY }}" > ~/.ssh/id_rsa
@@ -146,12 +154,14 @@ jobs:
           ssh-keyscan -H prod-clientpatch.bluearchive.me >> ~/.ssh/known_hosts
 
       - name: Update config files
+        if: github.event_name != 'schedule'
         run: |
           ssh ubuntu@prod-clientpatch.bluearchive.me "rm -rf /home/ubuntu/redirect_server/server_cfg/*"
           rsync -av --include='*/' --include='*/catalog.json' --exclude='*' ./assets/ ubuntu@prod-clientpatch.bluearchive.me:/home/ubuntu/nginx_redirect_server/server_cfg/
 
           
       - name: Restart Redirect Server
+        if: github.event_name != 'schedule'
         run: |
           ssh ubuntu@prod-clientpatch.bluearchive.me "
             cd /home/ubuntu/nginx_redirect_server/
@@ -159,13 +169,16 @@ jobs:
             sudo openresty -c /home/ubuntu/nginx_redirect_server/nginx.conf
           "
       - name: Install rclone
+        if: github.event_name != 'schedule'
         run: |
           curl https://rclone.org/install.sh | sudo bash
       
       - name: Configure rclone for Cloudflare R2
+        if: github.event_name != 'schedule'
         run: |
           rclone config create r2 s3 provider=Cloudflare env_auth=true endpoint=${{ secrets.R2_ENDPOINT }} acl=public-read
       - name: Sync to Cloudflare R2
+        if: github.event_name != 'schedule'
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
@@ -176,18 +189,21 @@ jobs:
             --s3-disable-checksum \
             --exclude "apk/**"
       - name: Purge Cloudflare Cache
+        if: github.event_name != 'schedule'
         run: |
           curl -X POST "https://api.cloudflare.com/client/v4/zones/${{ secrets.CF_ZONE_ID }}/purge_cache" \
              -H "Authorization: Bearer ${{ secrets.CF_PURGE_TOKEN }}" \
              -H "Content-Type: application/json" \
              --data '{"purge_everything":true}'  
       - name: Purge Edge Servers Cache
+        if: github.event_name != 'schedule'
         run: |
           ssh ubuntu@prod-clientpatch.bluearchive.me "
           cd /home/ubuntu/nginx_redirect_server/ &&
           nohup timeout 600 ./clear-edge-cache.sh > clear-edge-cache.log 2>&1 &
           "
       - name: Push changes
+        if: github.event_name != 'schedule'
         run: git push origin
       #- name: Check if should deploy
       #  id: check_deploy
