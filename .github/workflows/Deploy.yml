@@ -205,6 +205,7 @@ jobs:
       - name: Push changes
         if: github.event_name != 'schedule'
         run: |
+          git reset --hard
           git pull --rebase
           git push origin
       #- name: Check if should deploy
