@@ -197,6 +197,7 @@ jobs:
           --filter "+ *.hash" \
           --filter "+ *.db" \
           --filter "+ *.bundle" \
+          --filter "+ *.bytes" \
           --filter "- **"
       - name: Purge Cloudflare Cache
         if: github.event_name != 'schedule'
