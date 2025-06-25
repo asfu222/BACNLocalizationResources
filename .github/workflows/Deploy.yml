@@ -168,15 +168,15 @@ jobs:
             sudo openresty -s quit -c /home/ubuntu/nginx_redirect_server/nginx.conf || sudo pkill openresty
             sudo openresty -c /home/ubuntu/nginx_redirect_server/nginx.conf
           "
-      - name: Install rclone
-        if: github.event_name != 'schedule'
-        run: |
-          curl https://rclone.org/install.sh | sudo bash
+      #- name: Install rclone
+      #  if: github.event_name != 'schedule'
+      #  run: |
+      #    curl https://rclone.org/install.sh | sudo bash
       
-      - name: Configure rclone for Cloudflare R2
-        if: github.event_name != 'schedule'
-        run: |
-          rclone config create r2 s3 provider=Cloudflare env_auth=true endpoint=${{ secrets.R2_ENDPOINT }} acl=public-read
+      #- name: Configure rclone for Cloudflare R2
+      #  if: github.event_name != 'schedule'
+      #  run: |
+      #    rclone config create r2 s3 provider=Cloudflare env_auth=true endpoint=${{ secrets.R2_ENDPOINT }} acl=public-read
       #- name: Sync to Cloudflare R2
       #  if: github.event_name != 'schedule'
       #  env:
@@ -221,7 +221,8 @@ jobs:
               --include "*.db" \
               --include "*.bundle" \
               --include "*.bytes" \
-              --exact-timestamps
+              --exact-timestamps \
+              --delete
   
       - name: Purge Cloudflare Cache
         if: github.event_name != 'schedule'
