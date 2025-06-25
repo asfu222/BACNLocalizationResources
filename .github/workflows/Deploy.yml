@@ -184,11 +184,20 @@ jobs:
           AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
         run: |
           rclone sync assets/ r2:bluearchive \
-            --s3-upload-cutoff 1G \
-            --s3-chunk-size 5M \
-            --s3-disable-checksum \
-            --exclude "apk/**" \
-            --exclude "*.py"
+          --s3-upload-cutoff 1G \
+          --s3-chunk-size 5M \
+          --s3-disable-checksum \
+          --filter "- **/.git/**" \
+          --filter "- **/.github/**" \
+          --filter "- apk/**" \
+          --filter "+ *.zip" \
+          --filter "+ *.json" \
+          --filter "+ *.html" \
+          --filter "+ ba.env" \
+          --filter "+ *.hash" \
+          --filter "+ *.db" \
+          --filter "+ *.bundle" \
+          --filter "- **"
       - name: Purge Cloudflare Cache
         if: github.event_name != 'schedule'
         run: |
