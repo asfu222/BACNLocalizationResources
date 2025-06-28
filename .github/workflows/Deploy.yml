@@ -210,9 +210,7 @@ jobs:
           AWS_MAX_ATTEMPTS: 5
         run: | 
           aws s3 sync assets/ s3://bluearchive/ --checksum-algorithm CRC32 \
-              --exclude ".git/*" \
-              --exclude ".github/*" \
-              --exclude "apk/*" \
+              --exclude "*" \
               --include "*.zip" \
               --include "*.json" \
               --include "*.html" \
@@ -221,6 +219,9 @@ jobs:
               --include "*.db" \
               --include "*.bundle" \
               --include "*.bytes" \
+              --exclude "*/.git/*" \
+              --exclude "*/.github/*" \
+              --exclude "apk/*" \
               --exact-timestamps \
               --delete
   
