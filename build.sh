@@ -49,20 +49,20 @@ $PYTHON_CMD patch_media_catalog.py
 $PYTHON_CMD patch_table_catalog.py
 
 # Extract catalog_Remotes
-[ -f ./catalog_Android.zip ] && unzip -o ./catalog_Android.zip -d ./catalog_Android
-[ -f ./catalog_iOS.zip ] && unzip -o ./catalog_iOS.zip -d ./catalog_iOS
+#[ -f ./catalog_Android.zip ] && unzip -o ./catalog_Android.zip -d ./catalog_Android
+#[ -f ./catalog_iOS.zip ] && unzip -o ./catalog_iOS.zip -d ./catalog_iOS
 
-$PYTHON_CMD patch_bundleDL.py
+#$PYTHON_CMD patch_bundleDL.py
 
 # Zip catalog_Remotes
-find . -type f -path "*/Android/catalog_Remote.json" -exec sh -c '
-  dir=$(dirname "{}")
-  zip -j "$dir/catalog_Android.zip" "{}" && rm "{}"
-' \;
-find . -type f -path "*/iOS/catalog_Remote.json" -exec sh -c '
-  dir=$(dirname "{}")
-  zip -j "$dir/catalog_iOS.zip" "{}" && rm "{}"
-' \;
+#find . -type f -path "*/Android/catalog_Remote.json" -exec sh -c '
+#  dir=$(dirname "{}")
+#  zip -j "$dir/catalog_Android.zip" "{}" && rm "{}"
+#' \;
+#find . -type f -path "*/iOS/catalog_Remote.json" -exec sh -c '
+#  dir=$(dirname "{}")
+#  zip -j "$dir/catalog_iOS.zip" "{}" && rm "{}"
+#' \;
 
 # Clean up
 find . -type d -name "temp" -exec rm -rf {} +
