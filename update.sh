@@ -25,9 +25,10 @@ download_file() {
 
 download_file "${BASE_URL}/TableBundles/TableCatalog.bytes" "TableCatalog.bytes"
 download_file "${BASE_URL}/MediaResources/Catalog/MediaCatalog.bytes" "MediaCatalog.bytes"
-download_file "${BASE_URL}/Android/bundleDownloadInfo.json" "bundleDownloadInfo-Android.json"
-download_file "${BASE_URL}/iOS/bundleDownloadInfo.json" "bundleDownloadInfo-iOS.json"
-download_file "${BASE_URL}/Android/catalog_Android.zip" "catalog_Android.zip"
-download_file "${BASE_URL}/iOS/catalog_iOS.zip" "catalog_iOS.zip"
+# download_file "${BASE_URL}/Android/bundleDownloadInfo.json" "bundleDownloadInfo-Android.json"
+# download_file "${BASE_URL}/iOS/bundleDownloadInfo.json" "bundleDownloadInfo-iOS.json"
+# Switch to {OS}_PatchPack/BundlePackingInfo.json -> full patch zip
+# download_file "${BASE_URL}/Android/catalog_Android.zip" "catalog_Android.zip"
+# download_file "${BASE_URL}/iOS/catalog_iOS.zip" "catalog_iOS.zip"
 download_file "${BASE_URL}/TableBundles/Excel.zip" "Excel.zip"
 download_file "${BASE_URL}/TableBundles/ExcelDB.db" "ExcelDB.db"
