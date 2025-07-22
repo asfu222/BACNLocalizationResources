@@ -1,7 +1,3 @@
-[submodule "assets/commonpng"]
-	path = assets/commonpng
-	url = https://github.com/asfu222/commonpng.git
-	branch = main
 [submodule "assets/beicheng"]
 	path = assets/beicheng
 	url = https://github.com/asfu222/beicheng.git
