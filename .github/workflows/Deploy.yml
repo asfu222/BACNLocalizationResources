@@ -226,7 +226,6 @@ jobs:
                     --include \"ba.env\" \
                     --include \"*.hash\" \
                     --include \"*.db\" \
-                    --include \"*.bundle\" \
                     --include \"*.bytes\" \
                     --exclude \"*/.git/*\" \
                     --exclude \"*/.github/*\" \
