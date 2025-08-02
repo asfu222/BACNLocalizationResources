@@ -16,7 +16,7 @@ def is_hidden(filepath: Path):
 
 ALLOWED_PATHS = [Path("assets/beicheng"), Path("assets/commonpng"), Path("assets/scenariovoice")]
 OUTPUT_FILE = Path("assets/catalog.html")
-STATIC_NAMES = ["bundleDownloadInfo.json", "TableCatalog.bytes", "MediaCatalog.bytes", "catalog_Android.zip", "catalog_iOS.zip"]
+STATIC_NAMES = ["BundlePackingInfo.json", "TableCatalog.bytes", "MediaCatalog.bytes", "catalog_Android.zip", "catalog_iOS.zip"]
 
 def calculate_hash64(name: str | bytes) -> int:
     if isinstance(name, str):
@@ -35,7 +35,7 @@ def generate_file_list():
         for file_path in sorted(base_path.rglob("*")):
             if file_path.is_file() and not is_hidden(file_path):
                 original_name = file_path.name
-                hash64 = calculate_hash64(original_name)
+                hash64 = calculate_hash64(original_name.lower())
                 crc = calculate_crc(file_path)
                 new_name = f"{hash64}_{crc}" if original_name not in STATIC_NAMES and not original_name.endswith(".bundle") else original_name
                 rel_path = file_path.relative_to("assets").as_posix()

@@ -47,26 +47,36 @@ jobs:
             BlueArchiveLocalizationTools/Extracted/Table/ExcelDB
           key: ${{ runner.os }}-exceldb-${{ hashFiles('ExcelDB.db') }}
           
-      - name: Get latest commit hash for scenariovoice
+      - name: Get latest commit hashes
         run: |
-          LATEST_VOICE_COMMIT=$(git ls-remote https://x-access-token:${{ secrets.RSS_REPO_TOKEN }}@github.com/asfu222/scenariovoice.git HEAD | awk '{ print $1 }')
-          echo "LATEST_VOICE_COMMIT=$LATEST_VOICE_COMMIT" >> $GITHUB_ENV      
+          echo "LATEST_VOICE_COMMIT=$(git ls-remote https://x-access-token:${{ secrets.RSS_REPO_TOKEN }}@github.com/asfu222/scenariovoice.git HEAD | awk '{ print $1 }')" >> $GITHUB_ENV
+          echo "LATEST_PNG_COMMIT=$(git ls-remote https://x-access-token:${{ secrets.RSS_REPO_TOKEN }}@github.com/asfu222/commonpng.git HEAD | awk '{ print $1 }')" >> $GITHUB_ENV
           
       - name: Restore ScenarioVoice Cache
+        id: scenariovoice_cache
         uses: actions/cache@v4
         with:
           path: |
-            assets/scenariovoice/latest/MediaResources/GameData/Audio/VOC_CN/*.zip
             assetsBuildSrc/scenariovoice/latest/MediaResources/GameData/voice_file_names.json
           key: ${{ runner.os }}-scenariovoice-${{ env.LATEST_VOICE_COMMIT }}
 
-      - name: Clone scenariovoice if not exist
-        if: github.event_name != 'schedule'
+      - name: Restore commonpng cache
+        id: commonpng_cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            assets/commonpng/latest/catalog.json
+          key: ${{ runner.os }}-commonpng-${{ env.LATEST_PNG_COMMIT }}
+
+      - name: Clone scenariovoice if necessary
+        if: github.event_name != 'schedule' && steps.scenariovoice_cache.outputs.cache-hit != 'true'
+        run: git clone https://x-access-token:${{ secrets.RSS_REPO_TOKEN }}@github.com/asfu222/scenariovoice.git assets/scenariovoice
+
+      - name: Clone commonpng if necessary
+        if: github.event_name != 'schedule' && steps.commonpng_cache.outputs.cache-hit != 'true'
         run: |
-          if [ ! -d "assets/scenariovoice" ]; then
-            echo "Cache miss: Cloning scenariovoice..."
-            git clone https://x-access-token:${{ secrets.RSS_REPO_TOKEN }}@github.com/asfu222/scenariovoice.git assets/scenariovoice
-          fi
+          git clone https://x-access-token:${{ secrets.RSS_REPO_TOKEN }}@github.com/asfu222/commonpng.git assets/commonpng
+          python lfs.py join assets/commonpng
 
       - name: Setup git credentials
         run: |
@@ -146,7 +156,6 @@ jobs:
             git commit -m "更新版本号 [skip ci]"
           fi
       - name: Setup SSH Key
-        if: github.event_name != 'schedule'
         run: |
           mkdir -p ~/.ssh
           echo "${{ secrets.REDIRECT_SERVER_SSH_KEY }}" > ~/.ssh/id_rsa
@@ -161,7 +170,6 @@ jobs:
 
           
       - name: Restart Redirect Server
-        if: github.event_name != 'schedule'
         run: |
           ssh ubuntu@prod-clientpatch.bluearchive.me "
             cd /home/ubuntu/nginx_redirect_server/
@@ -208,22 +216,30 @@ jobs:
           AWS_DEFAULT_REGION: auto
           AWS_ENDPOINT_URL: ${{ secrets.R2_ENDPOINT }}
           AWS_MAX_ATTEMPTS: 5
+          SCENARIOVOICE_CACHE_HIT: ${{ steps.scenariovoice_cache.outputs.cache-hit }}
+          COMMONPNG_CACHE_HIT: ${{ steps.commonpng_cache.outputs.cache-hit }}
         run: | 
-          aws s3 sync assets/ s3://bluearchive/ --checksum-algorithm CRC32 \
-              --exclude "*" \
-              --include "*.zip" \
-              --include "*.json" \
-              --include "*.html" \
-              --include "ba.env" \
-              --include "*.hash" \
-              --include "*.db" \
-              --include "*.bundle" \
-              --include "*.bytes" \
-              --exclude "*/.git/*" \
-              --exclude "*/.github/*" \
-              --exclude "apk/*" \
-              --exact-timestamps \
-              --delete
+          INCLUDES="--exclude \"*\" \
+                    --include \"*.zip\" \
+                    --include \"*.json\" \
+                    --include \"*.html\" \
+                    --include \"ba.env\" \
+                    --include \"*.hash\" \
+                    --include \"*.db\" \
+                    --include \"*.bundle\" \
+                    --include \"*.bytes\" \
+                    --exclude \"*/.git/*\" \
+                    --exclude \"*/.github/*\" \
+                    --exclude \"apk/*\""
+          if [ "$SCENARIOVOICE_CACHE_HIT" = "true" ]; then
+              echo "Excluding scenariovoice/* from upload"
+              INCLUDES="$INCLUDES --exclude \"scenariovoice/*\""
+          fi
+          if [ "$COMMONPNG_CACHE_HIT" = "true" ]; then
+              echo "Excluding scenariovoice/* from upload"
+              INCLUDES="$INCLUDES --exclude \"commonpng/*\""
+          fi
+          eval aws s3 sync assets/ s3://bluearchive/ --checksum-algorithm CRC32 $EXCLUDES --exact-timestamps --delete
   
       - name: Purge Cloudflare Cache
         if: github.event_name != 'schedule'

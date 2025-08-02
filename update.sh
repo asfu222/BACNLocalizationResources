@@ -2,8 +2,6 @@
 
 export $(grep -v '^#' ba.env | xargs)
 
-BASE_URL=$(curl -s "$BA_SERVER_URL" | grep -oP '"AddressablesCatalogUrlRoot": *"\K[^"]+' | tail -n 1)
-
 download_file() {
     local url=$1
     local output=$2
@@ -23,12 +21,12 @@ download_file() {
 }
 
 
-download_file "${BASE_URL}/TableBundles/TableCatalog.bytes" "TableCatalog.bytes"
-download_file "${BASE_URL}/MediaResources/Catalog/MediaCatalog.bytes" "MediaCatalog.bytes"
-# download_file "${BASE_URL}/Android/bundleDownloadInfo.json" "bundleDownloadInfo-Android.json"
-# download_file "${BASE_URL}/iOS/bundleDownloadInfo.json" "bundleDownloadInfo-iOS.json"
+download_file "${ADDRESSABLE_CATALOG_URL}/TableBundles/TableCatalog.bytes" "TableCatalog.bytes"
+download_file "${ADDRESSABLE_CATALOG_URL}/MediaResources/Catalog/MediaCatalog.bytes" "MediaCatalog.bytes"
+download_file "${ADDRESSABLE_CATALOG_URL}/Android_PatchPack/BundlePackingInfo.json" "BundlePackingInfo-Android.json"
+download_file "${ADDRESSABLE_CATALOG_URL}/iOS_PatchPack/BundlePackingInfo.json" "BundlePackingInfo-iOS.json"
 # Switch to {OS}_PatchPack/BundlePackingInfo.json -> full patch zip
-# download_file "${BASE_URL}/Android/catalog_Android.zip" "catalog_Android.zip"
-# download_file "${BASE_URL}/iOS/catalog_iOS.zip" "catalog_iOS.zip"
-download_file "${BASE_URL}/TableBundles/Excel.zip" "Excel.zip"
-download_file "${BASE_URL}/TableBundles/ExcelDB.db" "ExcelDB.db"
+download_file "${ADDRESSABLE_CATALOG_URL}/Android_PatchPack/catalog_Android.zip" "catalog_Android.zip"
+download_file "${ADDRESSABLE_CATALOG_URL}/iOS_PatchPack/catalog_iOS.zip" "catalog_iOS.zip"
+download_file "${ADDRESSABLE_CATALOG_URL}/TableBundles/Excel.zip" "Excel.zip"
+download_file "${ADDRESSABLE_CATALOG_URL}/TableBundles/ExcelDB.db" "ExcelDB.db"
