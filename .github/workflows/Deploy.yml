@@ -238,7 +238,7 @@ jobs:
               echo "Excluding scenariovoice/* from upload"
               INCLUDES="$INCLUDES --exclude \"commonpng/*\""
           fi
-          eval aws s3 sync assets/ s3://bluearchive/ --checksum-algorithm CRC32 $EXCLUDES --exact-timestamps --delete
+          eval aws s3 sync assets/ s3://bluearchive/ --checksum-algorithm CRC32 $INCLUDES --exact-timestamps --delete
   
       - name: Purge Cloudflare Cache
         if: github.event_name != 'schedule'
