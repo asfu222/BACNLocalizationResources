@@ -59,6 +59,7 @@ jobs:
           path: |
             assets/scenariovoice/latest/MediaResources/GameData/Audio/VOC_CN/zips.json
             assetsBuildSrc/scenariovoice/latest/MediaResources/GameData/voice_file_names.json
+            assets/scenariovoice/latest/catalog.json
           key: ${{ runner.os }}-scenariovoice-${{ env.LATEST_VOICE_COMMIT }}
 
       - name: Restore commonpng cache
