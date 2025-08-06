@@ -1,0 +1,94 @@
+# Clash规则模板，可自行添加至其它配置 或 修改本配置 实现你的需求
+ipv6: true
+mixed-port: 7890
+mode: rule
+allow-lan: true
+log-level: info
+external-controller: 127.0.0.1:6170
+
+# 必要
+hosts:
+  yostar-serverinfo.bluearchiveyostar.com: 'info.sdk.bluearchive.me' # 主资源
+  ba-jp-sdk.bluearchive.jp: 'sdk.bluearchive.me' # 仅登录梯子
+
+dns:
+  enable: true
+  ipv6: true
+  # 必要
+  use-hosts: true
+  # 下面随意
+  nameserver:
+    - 223.5.5.5
+    - 119.29.29.29
+    - 8.8.8.8
+    - 8.8.4.4
+    - 1.0.0.1
+    - 1.1.1.1
+    - tls://223.5.5.5:853
+    - tls://8.8.8.8
+    - tls://8.8.4.4
+    - tls://1.0.0.1
+    - tls://1.1.1.1
+    - https://dns.alidns.com/dns-query#h3=true
+    - https://mozilla.cloudflare-dns.com/dns-query#DNS&h3=true
+    - quic://dns.adguard.com:784
+    - system
+  fallback: []
+  enhanced-mode: fake-ip
+  fake-ip-range: 172.19.0.1/16
+  fake-ip-filter:
+    - "*.lan"
+    - "*.local"
+    - "time.*.com"
+    - "time.*.gov"
+    - "time.*.edu.cn"
+    - "time.*.apple.com"
+    - "time-ios.apple.com"
+    - "time1.*.com"
+    - "time2.*.com"
+    - "time3.*.com"
+    - "time4.*.com"
+    - "time5.*.com"
+    - "time6.*.com"
+    - "time7.*.com"
+    - "ntp.*.com"
+    - "ntp1.*.com"
+    - "ntp2.*.com"
+    - "ntp3.*.com"
+    - "ntp4.*.com"
+    - "ntp5.*.com"
+    - "ntp6.*.com"
+    - "ntp7.*.com"
+    - "*.time.edu.cn"
+    - "*.ntp.org.cn"
+    - "*.pool.ntp.org"
+    - "+.services.googleapis.cn"
+    - "+.push.apple.com"
+    - "time1.cloud.tencent.com"
+    - "localhost.ptlogin2.qq.com"
+    - "+.stun.*.*"
+    - "+.stun.*.*.*"
+    - "+.stun.*.*.*.*"
+    - "+.stun.*.*.*.*.*"
+    - "lens.l.google.com"
+    - "*.n.n.srv.nintendo.net"
+    - "+.stun.playstation.net"
+    - "xbox.*.*.microsoft.com"
+    - "*.*.xboxlive.com"
+    - "*.msftncsi.com"
+    - "*.msftconnecttest.com"
+    - "*.mcdn.bilivideo.cn"
+    - "+.bilibili.com"
+    - "+.bilicdn.com"
+    - "+.bilivideo.com"
+    - "+.market.xiaomi.com"
+    - "WORKGROUP"
+  fake-ip-filter-mode: blacklist
+  default-nameserver:
+    - 223.5.5.5
+    - 119.29.29.29
+    - 8.8.8.8
+    - 8.8.4.4
+    - 1.0.0.1
+    - 1.1.1.1
+    - system
