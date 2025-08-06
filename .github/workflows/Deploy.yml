@@ -57,6 +57,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: |
+            assets/scenariovoice/latest/MediaResources/GameData/Audio/VOC_CN/*.zip
             assetsBuildSrc/scenariovoice/latest/MediaResources/GameData/voice_file_names.json
           key: ${{ runner.os }}-scenariovoice-${{ env.LATEST_VOICE_COMMIT }}
 
@@ -235,7 +236,7 @@ jobs:
               INCLUDES="$INCLUDES --exclude \"scenariovoice/*\""
           fi
           if [ "$COMMONPNG_CACHE_HIT" = "true" ]; then
-              echo "Excluding scenariovoice/* from upload"
+              echo "Excluding commonpng/* from upload"
               INCLUDES="$INCLUDES --exclude \"commonpng/*\""
           fi
           eval aws s3 sync assets/ s3://bluearchive/ --checksum-algorithm CRC32 $INCLUDES --exact-timestamps --delete
