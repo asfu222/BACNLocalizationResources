@@ -166,10 +166,25 @@ jobs:
 
       - name: Update config files
         if: github.event_name != 'schedule'
+        env:
+          SCENARIOVOICE_CACHE_HIT: ${{ steps.scenariovoice_cache.outputs.cache-hit }}
+          COMMONPNG_CACHE_HIT: ${{ steps.commonpng_cache.outputs.cache-hit }}
         run: |
           ssh ubuntu@prod-clientpatch.bluearchive.me "rm -rf /home/ubuntu/redirect_server/server_cfg/*"
-          rsync -av --include='*/' --include='*/catalog.json' --exclude='*' ./assets/ ubuntu@prod-clientpatch.bluearchive.me:/home/ubuntu/nginx_redirect_server/server_cfg/
-
+          
+          INCLUDES="--include='*/' --include='*/catalog.json' --exclude='*'"
+          
+          if [ "$SCENARIOVOICE_CACHE_HIT" = "true" ]; then
+            echo "Excluding scenariovoice/* from upload"
+            INCLUDES="--exclude='scenariovoice/**' $INCLUDES"
+          fi
+      
+          if [ "$COMMONPNG_CACHE_HIT" = "true" ]; then
+            echo "Excluding commonpng/* from upload"
+            INCLUDES="--exclude='commonpng/**' $INCLUDES"
+          fi
+      
+          rsync -av $INCLUDES ./assets/ ubuntu@prod-clientpatch.bluearchive.me:/home/ubuntu/nginx_redirect_server/server_cfg/
           
       - name: Restart Redirect Server
         run: |
