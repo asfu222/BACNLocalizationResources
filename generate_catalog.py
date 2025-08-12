@@ -53,7 +53,10 @@ def generate_catalog_jsons():
         for subdir in base_path.iterdir():
             file_list = [str(file.relative_to(subdir)).replace("\\", "/") for file in subdir.rglob("*") if file.is_file()]
             if len(file_list) > 0:
-                with open(subdir / "catalog.json", "wb") as c_json:
+                catalog_path = subdir / "catalog.json"
+                if catalog_path.exists():
+                    continue
+                with open(catalog_path, "wb") as c_json:
                     c_json.write(json.dumps(file_list, separators=(',', ':')).encode())
         
 def build_directory_tree(file_data):
