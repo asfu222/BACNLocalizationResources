@@ -666,9 +666,9 @@ def generate_html(file_data):
 
 def main():
     file_data = generate_file_list()
-    html_content = generate_html(file_data)
-    OUTPUT_FILE.write_text(html_content, encoding="utf-8")
-    print(f"Generated {OUTPUT_FILE} with {len(file_data)} files.")
+    #html_content = generate_html(file_data)
+    #OUTPUT_FILE.write_text(html_content, encoding="utf-8")
+    #print(f"Generated {OUTPUT_FILE} with {len(file_data)} files.")
     generate_catalog_jsons()
     print("Generated catalog jsons")
 

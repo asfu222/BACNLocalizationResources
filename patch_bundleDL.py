@@ -7,6 +7,8 @@ import shutil
 import requests
 import argparse
 from zipfile import ZipFile
+import concurrent.futures
+
 def strip_crc(filename: str) -> str:
     m = re.match(r"^(.+?_)(\d+)(\.[^.]+)$", filename)
     return f"{m.group(1)}{m.group(3)}" if m else filename
@@ -152,5 +154,11 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser("Bundle patcher")
     parser.add_argument("url", help="Addressable catalog root url")
     args = parser.parse_args()
-    apply_patch(args.url, "Android")
-    apply_patch(args.url, "iOS")
+    with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
+        futures = [
+            executor.submit(apply_patch, args.url, "Android"),
+            executor.submit(apply_patch, args.url, "iOS"),
+        ]
+        for f in concurrent.futures.as_completed(futures):
+            f.result()
+    print("Done patching bundles.")

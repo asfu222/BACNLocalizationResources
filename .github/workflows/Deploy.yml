@@ -10,7 +10,7 @@ on:
 permissions:
   contents: write
 jobs:
-  deploy:
+  deploy_main:
     runs-on: ubuntu-latest
 
     steps:
@@ -50,8 +50,7 @@ jobs:
       - name: Get latest commit hashes
         run: |
           echo "LATEST_VOICE_COMMIT=$(git ls-remote https://x-access-token:${{ secrets.RSS_REPO_TOKEN }}@github.com/asfu222/scenariovoice.git HEAD | awk '{ print $1 }')" >> $GITHUB_ENV
-          echo "LATEST_PNG_COMMIT=$(git ls-remote https://x-access-token:${{ secrets.RSS_REPO_TOKEN }}@github.com/asfu222/commonpng.git HEAD | awk '{ print $1 }')" >> $GITHUB_ENV
-          
+
       - name: Restore ScenarioVoice Cache
         id: scenariovoice_cache
         uses: actions/cache@v4
@@ -62,23 +61,9 @@ jobs:
             assets/scenariovoice/latest/catalog.json
           key: ${{ runner.os }}-scenariovoice-${{ env.LATEST_VOICE_COMMIT }}
 
-      - name: Restore commonpng cache
-        id: commonpng_cache
-        uses: actions/cache@v4
-        with:
-          path: |
-            assets/commonpng/latest/catalog.json
-          key: ${{ runner.os }}-commonpng-${{ env.LATEST_PNG_COMMIT }}-${{ hashFiles('BundlePackingInfo*.json') }}
-
       - name: Clone scenariovoice if necessary
         if: github.event_name != 'schedule' && steps.scenariovoice_cache.outputs.cache-hit != 'true'
         run: git clone https://x-access-token:${{ secrets.RSS_REPO_TOKEN }}@github.com/asfu222/scenariovoice.git assets/scenariovoice
-
-      - name: Clone commonpng if necessary
-        if: github.event_name != 'schedule' && steps.commonpng_cache.outputs.cache-hit != 'true'
-        run: |
-          git clone https://x-access-token:${{ secrets.RSS_REPO_TOKEN }}@github.com/asfu222/commonpng.git assets/commonpng
-          python lfs.py join assets/commonpng
 
       - name: Setup git credentials
         run: |
@@ -168,23 +153,16 @@ jobs:
         if: github.event_name != 'schedule'
         env:
           SCENARIOVOICE_CACHE_HIT: ${{ steps.scenariovoice_cache.outputs.cache-hit }}
-          COMMONPNG_CACHE_HIT: ${{ steps.commonpng_cache.outputs.cache-hit }}
         run: |
           ssh ubuntu@prod-clientpatch.bluearchive.me "rm -rf /home/ubuntu/redirect_server/server_cfg/*"
           
-          INCLUDES="--include='*/' --include='*/catalog.json' --exclude='*'"
+          INCLUDES="--exclude='commonpng/**' --include='*/' --include='*/catalog.json' --exclude='*'"
           
           if [ "$SCENARIOVOICE_CACHE_HIT" = "true" ]; then
             echo "Excluding scenariovoice/* from upload"
             INCLUDES="--exclude='scenariovoice/**' $INCLUDES"
           fi
-      
-          if [ "$COMMONPNG_CACHE_HIT" = "true" ]; then
-            echo "Excluding commonpng/* from upload"
-            INCLUDES="--exclude='commonpng/**' $INCLUDES"
-          fi
-      
-          rsync -av $INCLUDES ./assets/ ubuntu@prod-clientpatch.bluearchive.me:/home/ubuntu/nginx_redirect_server/server_cfg/
+          eval rsync -av $INCLUDES ./assets/ ubuntu@prod-clientpatch.bluearchive.me:/home/ubuntu/nginx_redirect_server/server_cfg/
           
       - name: Restart Redirect Server
         run: |
@@ -193,37 +171,6 @@ jobs:
             sudo openresty -s quit -c /home/ubuntu/nginx_redirect_server/nginx.conf || sudo pkill openresty
             sudo openresty -c /home/ubuntu/nginx_redirect_server/nginx.conf
           "
-      #- name: Install rclone
-      #  if: github.event_name != 'schedule'
-      #  run: |
-      #    curl https://rclone.org/install.sh | sudo bash
-      
-      #- name: Configure rclone for Cloudflare R2
-      #  if: github.event_name != 'schedule'
-      #  run: |
-      #    rclone config create r2 s3 provider=Cloudflare env_auth=true endpoint=${{ secrets.R2_ENDPOINT }} acl=public-read
-      #- name: Sync to Cloudflare R2
-      #  if: github.event_name != 'schedule'
-      #  env:
-      #    AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
-      #    AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
-      #  run: |
-      #    rclone sync assets/ r2:bluearchive \
-      #    --s3-upload-cutoff 1G \
-      #    --s3-chunk-size 5M \
-      #    --s3-disable-checksum \
-      #    --filter "- **/.git/**" \
-      #    --filter "- **/.github/**" \
-      #    --filter "- apk/**" \
-      #    --filter "+ *.zip" \
-      #    --filter "+ *.json" \
-      #    --filter "+ *.html" \
-      #    --filter "+ ba.env" \
-      #    --filter "+ *.hash" \
-      #    --filter "+ *.db" \
-      #    --filter "+ *.bundle" \
-      #    --filter "+ *.bytes" \
-      #    --filter "- **"
 
       - name: Deploy to Cloudflare R2
         if: github.event_name != 'schedule'
@@ -234,7 +181,6 @@ jobs:
           AWS_ENDPOINT_URL: ${{ secrets.R2_ENDPOINT }}
           AWS_MAX_ATTEMPTS: 5
           SCENARIOVOICE_CACHE_HIT: ${{ steps.scenariovoice_cache.outputs.cache-hit }}
-          COMMONPNG_CACHE_HIT: ${{ steps.commonpng_cache.outputs.cache-hit }}
         run: | 
           INCLUDES="--exclude \"*\" \
                     --include \"*.zip\" \
@@ -250,10 +196,6 @@ jobs:
           if [ "$SCENARIOVOICE_CACHE_HIT" = "true" ]; then
               echo "Excluding scenariovoice/* from upload"
               INCLUDES="$INCLUDES --exclude \"scenariovoice/*\""
-          fi
-          if [ "$COMMONPNG_CACHE_HIT" = "true" ]; then
-              echo "Excluding commonpng/* from upload"
-              INCLUDES="$INCLUDES --exclude \"commonpng/*\""
           fi
           eval aws s3 sync assets/ s3://bluearchive/ --checksum-algorithm CRC32 $INCLUDES --exact-timestamps --delete
   
@@ -277,39 +219,109 @@ jobs:
           git reset --hard
           git pull --rebase
           git push origin
-      #- name: Check if should deploy
-      #  id: check_deploy
-      #  run: |
-      #    if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-      #      echo "Manual trigger – proceeding with deployment."
-      #      echo "should_deploy=true" >> $GITHUB_ENV
-      #      exit 0
-      #    fi
-      #    PREVIOUS_DEPLOY_URL="https://bluearchive.me/.last_deployed_commit"
-      #    curl -s $PREVIOUS_DEPLOY_URL > .last_deployed_commit
-      #    if [ -f .last_deployed_commit ]; then
-      #      LAST_DEPLOYED=$(cat .last_deployed_commit)
-      #    else
-      #      LAST_DEPLOYED=""
-      #    fi
-      #    CURRENT=$(git rev-parse HEAD)
-      #    echo "Current commit: $CURRENT"
-      #    echo "Last deployed commit: $LAST_DEPLOYED"
-      #    if [ "$CURRENT" = "$LAST_DEPLOYED" ]; then
-      #      echo "No new commit detected. Skipping deployment."
-      #      echo "should_deploy=false" >> $GITHUB_ENV
-      #    else
-      #      echo "New commit detected. Proceeding with deployment."
-      #      echo "should_deploy=true" >> $GITHUB_ENV
-      #      echo $CURRENT > ./assets/.last_deployed_commit
-      #    fi
-          
-      #- name: Upload Artifact to GitHub Pages
-      #  uses: actions/upload-pages-artifact@v3
-      #  if: ${{ env.should_deploy == 'true' }}
-      #  with:
-      #    path: './assets'
+  deploy_bundles:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          submodules: false
 
-      #- name: Deploy to GitHub Pages
-      #  uses: actions/deploy-pages@v4
-      #  if: ${{ env.should_deploy == 'true' }}
+      - name: Download updated assets
+        run: |
+          chmod +x update_bundles.sh
+          ./update_bundles.sh
+
+      - name: Get latest commonpng commit hash
+        run: |
+          echo "LATEST_PNG_COMMIT=$(git ls-remote https://x-access-token:${{ secrets.RSS_REPO_TOKEN }}@github.com/asfu222/commonpng.git HEAD | awk '{ print $1 }')" >> $GITHUB_ENV
+
+      - name: Restore commonpng cache
+        id: commonpng_cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            assets/commonpng/latest/catalog.json
+          key: commonpng-${{ env.LATEST_PNG_COMMIT }}-${{ hashFiles('BundlePackingInfo*.json') }}
+
+      - name: Clone commonpng if necessary
+        if: github.event_name != 'schedule' && steps.commonpng_cache.outputs.cache-hit != 'true'
+        run: |
+          git clone https://x-access-token:${{ secrets.RSS_REPO_TOKEN }}@github.com/asfu222/commonpng.git assets/commonpng
+          python lfs.py join assets/commonpng
+
+      - name: Build Assets
+        if: github.event_name != 'schedule' && steps.commonpng_cache.outputs.cache-hit != 'true'
+        run: |
+          chmod +x build_bundles.sh
+          ./build_bundles.sh
+
+      - name: Update bundle version
+        if: github.event_name != 'schedule' && steps.commonpng_cache.outputs.cache-hit != 'true'
+        run: |
+          echo "commonpng-${{ env.LATEST_PNG_COMMIT }}-${{ hashFiles('BundlePackingInfo*.json') }}" > assets/static/bundle_version.hash
+          git add assets/static/bundle_version.hash
+          git commit -m "更新图文版本号 [skip ci]"
+      
+      - name: Setup SSH Key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.REDIRECT_SERVER_SSH_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H prod-clientpatch.bluearchive.me >> ~/.ssh/known_hosts
+
+      - name: Update config files
+        if: github.event_name != 'schedule'
+        run: |
+          ssh ubuntu@prod-clientpatch.bluearchive.me "rm -rf /home/ubuntu/redirect_server/server_cfg/*"
+          rsync -av ./assets/commonpng/latest/catalog.json ubuntu@prod-clientpatch.bluearchive.me:/home/ubuntu/nginx_redirect_server/server_cfg/commonpng/latest/
+          
+      - name: Restart Redirect Server
+        run: |
+          ssh ubuntu@prod-clientpatch.bluearchive.me "
+            cd /home/ubuntu/nginx_redirect_server/
+            sudo openresty -s quit -c /home/ubuntu/nginx_redirect_server/nginx.conf || sudo pkill openresty
+            sudo openresty -c /home/ubuntu/nginx_redirect_server/nginx.conf
+          "
+          
+      - name: Deploy to Cloudflare R2
+        if: github.event_name != 'schedule' && steps.commonpng_cache.outputs.cache-hit != 'true'
+        env: 
+          AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: auto
+          AWS_ENDPOINT_URL: ${{ secrets.R2_ENDPOINT }}
+          AWS_MAX_ATTEMPTS: 5
+        run: | 
+          INCLUDES="--exclude \"*\" \
+                    --include \"*.zip\" \
+                    --include \"*.json\" \
+                    --include \"*.hash\" \
+                    --include \"*.bytes\" \
+                    --exclude \"*/.git/*\" \
+                    --exclude \"*/.github/*\" \
+          aws s3 sync assets/commonpng/latest s3://bluearchive/commonpng/latest --checksum-algorithm CRC32 $INCLUDES --exact-timestamps --delete
+          aws s3 cp assets/static/bundle_version.hash s3://bluearchive/assets/static/bundle_version.hash
+
+      - name: Purge Cloudflare Cache
+        if: github.event_name != 'schedule'
+        run: |
+          curl -X POST "https://api.cloudflare.com/client/v4/zones/${{ secrets.CF_ZONE_ID }}/purge_cache" \
+             -H "Authorization: Bearer ${{ secrets.CF_PURGE_TOKEN }}" \
+             -H "Content-Type: application/json" \
+             --data '{"purge_everything":true}'  
+
+      - name: Purge Edge Servers Cache
+        if: github.event_name != 'schedule'
+        run: |
+          ssh ubuntu@prod-clientpatch.bluearchive.me "
+          cd /home/ubuntu/nginx_redirect_server/ &&
+          nohup timeout 600 ./clear-edge-cache.sh > clear-edge-cache.log 2>&1 &
+          "
+
+      - name: Push changes
+        if: github.event_name != 'schedule'
+        run: |
+          git reset --hard
+          git pull --rebase
+          git push origin
