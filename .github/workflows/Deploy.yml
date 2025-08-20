@@ -235,7 +235,7 @@ jobs:
 
       - name: Get latest commonpng commit hash
         run: |
-          echo "LATEST_PNG_COMMIT=$(git ls-remote https://x-access-token:${{ secrets.RSS_REPO_TOKEN }}@github.com/asfu222/commonpng.git HEAD | awk '{ print $1 }')" >> $GITHUB_ENV
+          echo "LATEST_PNG_COMMIT=$(git ls-remote https://x-access-token:${{ secrets.COMMONPNG_REPO_TOKEN }}@github.com/asfu222/commonpng.git HEAD | awk '{ print $1 }')" >> $GITHUB_ENV
 
       - name: Restore commonpng cache
         id: commonpng_cache
@@ -248,7 +248,7 @@ jobs:
       - name: Clone commonpng if necessary
         if: github.event_name != 'schedule' && steps.commonpng_cache.outputs.cache-hit != 'true'
         run: |
-          git clone https://x-access-token:${{ secrets.RSS_REPO_TOKEN }}@github.com/asfu222/commonpng.git assets/commonpng
+          git clone https://x-access-token:${{ secrets.COMMONPNG_REPO_TOKEN }}@github.com/asfu222/commonpng.git assets/commonpng
           python lfs.py join assets/commonpng
 
       - name: Build Assets
@@ -256,6 +256,12 @@ jobs:
         run: |
           chmod +x build_bundles.sh
           ./build_bundles.sh
+
+      - name: Configure Git Identity
+        if: github.event_name != 'schedule'
+        run: |
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "actions@github.com"
 
       - name: Update bundle version
         if: github.event_name != 'schedule' && steps.commonpng_cache.outputs.cache-hit != 'true'
@@ -294,14 +300,14 @@ jobs:
           AWS_ENDPOINT_URL: ${{ secrets.R2_ENDPOINT }}
           AWS_MAX_ATTEMPTS: 5
         run: | 
-          INCLUDES="--exclude \"*\" \
-                    --include \"*.zip\" \
-                    --include \"*.json\" \
-                    --include \"*.hash\" \
-                    --include \"*.bytes\" \
-                    --exclude \"*/.git/*\" \
-                    --exclude \"*/.github/*\" \
-          aws s3 sync assets/commonpng/latest s3://bluearchive/commonpng/latest --checksum-algorithm CRC32 $INCLUDES --exact-timestamps --delete
+          INCLUDES="--exclude '*' \
+                    --include '*.zip' \
+                    --include '*.json' \
+                    --include '*.hash' \
+                    --include '*.bytes' \
+                    --exclude '*/.git/*' \
+                    --exclude '*/.github/*'"
+          eval aws s3 sync assets/commonpng/latest s3://bluearchive/commonpng/latest --checksum-algorithm CRC32 $INCLUDES --exact-timestamps --delete
           aws s3 cp assets/static/bundle_version.hash s3://bluearchive/assets/static/bundle_version.hash
 
       - name: Purge Cloudflare Cache
