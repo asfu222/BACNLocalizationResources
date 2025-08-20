@@ -227,7 +227,17 @@ jobs:
         uses: actions/checkout@v4
         with:
           submodules: false
-
+          
+      - name: Setup SSH Keys
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.COMMONPNG_DEPLOY_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          echo "${{ secrets.REDIRECT_SERVER_SSH_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H prod-clientpatch.bluearchive.me >> ~/.ssh/known_hosts
+          ssh-keyscan github.com >> ~/.ssh/known_hosts
+          
       - name: Download updated assets
         run: |
           chmod +x update_bundles.sh
@@ -235,7 +245,7 @@ jobs:
 
       - name: Get latest commonpng commit hash
         run: |
-          echo "LATEST_PNG_COMMIT=$(git ls-remote https://x-access-token:${{ secrets.COMMONPNG_REPO_TOKEN }}@github.com/asfu222/commonpng.git HEAD | awk '{ print $1 }')" >> $GITHUB_ENV
+          echo "LATEST_PNG_COMMIT=$(git ls-remote git@github.com:asfu222/commonpng.git HEAD | awk '{ print $1 }')" >> $GITHUB_ENV
 
       - name: Restore commonpng cache
         id: commonpng_cache
@@ -248,7 +258,7 @@ jobs:
       - name: Clone commonpng if necessary
         if: github.event_name != 'schedule' && steps.commonpng_cache.outputs.cache-hit != 'true'
         run: |
-          git clone https://x-access-token:${{ secrets.COMMONPNG_REPO_TOKEN }}@github.com/asfu222/commonpng.git assets/commonpng
+          git clone git@github.com:asfu222/commonpng.git assets/commonpng
           python lfs.py join assets/commonpng
 
       - name: Build Assets
@@ -269,13 +279,6 @@ jobs:
           echo "commonpng-${{ env.LATEST_PNG_COMMIT }}-${{ hashFiles('BundlePackingInfo*.json') }}" > assets/static/bundle_version.hash
           git add assets/static/bundle_version.hash
           git commit -m "更新图文版本号 [skip ci]"
-      
-      - name: Setup SSH Key
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.REDIRECT_SERVER_SSH_KEY }}" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -H prod-clientpatch.bluearchive.me >> ~/.ssh/known_hosts
 
       - name: Update config files
         if: github.event_name != 'schedule'
@@ -308,7 +311,7 @@ jobs:
                     --exclude '*/.git/*' \
                     --exclude '*/.github/*'"
           eval aws s3 sync assets/commonpng/latest s3://bluearchive/commonpng/latest --checksum-algorithm CRC32 $INCLUDES --exact-timestamps --delete
-          aws s3 cp assets/static/bundle_version.hash s3://bluearchive/assets/static/bundle_version.hash
+          aws s3 cp assets/static/bundle_version.hash s3://bluearchive/static/bundle_version.hash
 
       - name: Purge Cloudflare Cache
         if: github.event_name != 'schedule'
