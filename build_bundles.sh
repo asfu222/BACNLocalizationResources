@@ -31,4 +31,5 @@ find . -type f -path "*/iOS_PatchPack/catalog_Remote.json" -exec sh -c '
 ' \;
 
 find . -type d -name "temp" -exec rm -rf {} +
+$PYTHON_CMD -m pip install xxhash
 $PYTHON_CMD generate_catalog.py
