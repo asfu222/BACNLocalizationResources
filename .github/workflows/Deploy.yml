@@ -182,20 +182,21 @@ jobs:
           AWS_MAX_ATTEMPTS: 5
           SCENARIOVOICE_CACHE_HIT: ${{ steps.scenariovoice_cache.outputs.cache-hit }}
         run: | 
-          INCLUDES="--exclude \"*\" \
-                    --include \"*.zip\" \
-                    --include \"*.json\" \
-                    --include \"*.html\" \
-                    --include \"ba.env\" \
-                    --include \"*.hash\" \
-                    --include \"*.db\" \
-                    --include \"*.bytes\" \
-                    --exclude \"*/.git/*\" \
-                    --exclude \"*/.github/*\" \
-                    --exclude \"apk/*\""
+          INCLUDES="--exclude '*' \
+                    --include '*.zip' \
+                    --include '*.json' \
+                    --include '*.html' \
+                    --include 'ba.env' \
+                    --include '*.hash' \
+                    --include '*.db' \
+                    --include '*.bytes' \
+                    --exclude '*/.git/*' \
+                    --exclude '*/.github/*' \
+                    --exclude 'apk/*' \
+                    --exclude 'commonpng/*'"
           if [ "$SCENARIOVOICE_CACHE_HIT" = "true" ]; then
               echo "Excluding scenariovoice/* from upload"
-              INCLUDES="$INCLUDES --exclude \"scenariovoice/*\""
+              INCLUDES="$INCLUDES --exclude 'scenariovoice/*'"
           fi
           eval aws s3 sync assets/ s3://bluearchive/ --checksum-algorithm CRC32 $INCLUDES --exact-timestamps --delete
   
