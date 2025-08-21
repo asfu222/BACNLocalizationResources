@@ -196,7 +196,7 @@ jobs:
                     --exclude 'commonpng/*'"
           if [ "$SCENARIOVOICE_CACHE_HIT" = "true" ]; then
               echo "Excluding scenariovoice/* from upload"
-              aws s3 sync assets/scenariovoice/latest/MediaResourcrs/Catalog s3://bluearchive/scenariovoice/latest/MediaResources/Catalog --checksum-algorithm CRC32 --exact-timestamps --delete
+              aws s3 sync assets/scenariovoice/latest/MediaResources/Catalog s3://bluearchive/scenariovoice/latest/MediaResources/Catalog --checksum-algorithm CRC32 --exact-timestamps --delete
               INCLUDES="$INCLUDES --exclude 'scenariovoice/*'"
           fi
           eval aws s3 sync assets/ s3://bluearchive/ --checksum-algorithm CRC32 $INCLUDES --exact-timestamps --delete
