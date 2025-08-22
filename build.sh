@@ -57,6 +57,7 @@ chmod +x ./crcmanip-cli
 chmod +x ./MemoryPackRepacker
 
 ./MemoryPackRepacker deserialize media MediaCatalog.bytes MediaCatalog.json
+./MemoryPackRepacker deserialize table TableCatalog.bytes TableCatalog.json
 $PYTHON_CMD patch_media_catalog.py
 $PYTHON_CMD patch_table_catalog.py
 
