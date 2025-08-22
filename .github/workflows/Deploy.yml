@@ -285,6 +285,7 @@ jobs:
           rsync -av --delete ./assets/commonpng/latest/ ubuntu@prod-clientpatch.bluearchive.me:/home/ubuntu/nginx_redirect_server/server_cfg/commonpng/latest/
           
       - name: Restart Redirect Server
+        if: github.event_name != 'schedule'
         run: |
           ssh ubuntu@prod-clientpatch.bluearchive.me "
             cd /home/ubuntu/nginx_redirect_server/
@@ -312,7 +313,7 @@ jobs:
           aws s3 cp assets/static/bundle_version.hash s3://bluearchive/static/bundle_version.hash
 
       - name: Purge Cloudflare Cache
-        if: github.event_name != 'schedule'
+        if: github.event_name != 'schedule' && steps.commonpng_cache.outputs.cache-hit != 'true'
         run: |
           curl -X POST "https://api.cloudflare.com/client/v4/zones/${{ secrets.CF_ZONE_ID }}/purge_cache" \
              -H "Authorization: Bearer ${{ secrets.CF_PURGE_TOKEN }}" \
@@ -320,7 +321,7 @@ jobs:
              --data '{"purge_everything":true}'  
 
       - name: Purge Edge Servers Cache
-        if: github.event_name != 'schedule'
+        if: github.event_name != 'schedule' && steps.commonpng_cache.outputs.cache-hit != 'true'
         run: |
           ssh ubuntu@prod-clientpatch.bluearchive.me "
           cd /home/ubuntu/nginx_redirect_server/ &&
@@ -328,7 +329,7 @@ jobs:
           "
 
       - name: Push changes
-        if: github.event_name != 'schedule'
+        if: github.event_name != 'schedule' && steps.commonpng_cache.outputs.cache-hit != 'true'
         run: |
           git reset --hard
           git pull --rebase
