@@ -282,7 +282,7 @@ jobs:
       - name: Update config files
         if: github.event_name != 'schedule'
         run: |
-          rsync -av --delete ./assets/commonpng/latest/ ubuntu@prod-clientpatch.bluearchive.me:/home/ubuntu/nginx_redirect_server/server_cfg/commonpng/latest/
+          rsync -av --delete ./assets/commonpng/latest/catalog.json ubuntu@prod-clientpatch.bluearchive.me:/home/ubuntu/nginx_redirect_server/server_cfg/commonpng/latest/
           
       - name: Restart Redirect Server
         if: github.event_name != 'schedule'
