@@ -111,8 +111,7 @@ jobs:
         if: github.event_name != 'schedule'
         run: find ./assets -name ".git" -exec rm -rf {} +
         
-      - name: Restore Excel.zip Build Cache
-        uses: actions/cache@v4
+      - uses: actions/cache@v4
         with:
           path: |
             assets/beicheng/latest/TableBundles/Excel.zip
