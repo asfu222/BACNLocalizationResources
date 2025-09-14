@@ -47,5 +47,5 @@ for channel_dir in channel_dirs:
         ])
         if catalog_json_path.exists():
             catalog_json_path.unlink()
-        with open("./assets/static/version.hash", "r") as rf, open(files_path / "TableCatalog.hash", "w") as wf:
-            wf.write(f"{str(channel_dir.relative_to(Path("./assets")))}-{rf.read()}")
+        #with open("./assets/static/version.hash", "r") as rf, open(files_path / "TableCatalog.hash", "w") as wf:
+        #   wf.write(f"{str(channel_dir.relative_to(Path("./assets")))}-{rf.read()}")
