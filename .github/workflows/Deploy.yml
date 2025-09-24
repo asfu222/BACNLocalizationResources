@@ -22,11 +22,20 @@ jobs:
           persist-credentials: false
       - name: Clone build dependencies
         run: git clone --depth 1 https://github.com/asfu222/BlueArchiveLocalizationTools.git
+        
+      - name: Get cache key
+        id: get_cache_key
+        run: |
+          LM=$(curl -sIL "https://d.apkpure.net/b/XAPK/com.YostarJP.BlueArchive?version=latest" \
+               | grep -i "Last-Modified:" | cut -d' ' -f2-)
+          KEY=$(date -u -d "$LM" +%Y-%m-%dT%H:%M:%SZ || true)
+          echo "key=$KEY" >> $GITHUB_OUTPUT
+
       - name: Restore FlatData Cache
         uses: actions/cache@v4
         with:
           path: BlueArchiveLocalizationTools/Extracted/FlatData
-          key: ${{ runner.os }}-flatdata-${{ hashFiles('ba.env') }}
+          key: japan-${{ steps.get_cache_key.outputs.key }}
 
       - name: Download updated assets
         run: |

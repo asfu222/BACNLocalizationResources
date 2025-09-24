@@ -71,17 +71,6 @@ jobs:
             -H "X-GitHub-Api-Version: 2022-11-28" \
             https://api.github.com/repos/asfu222/commonpngsrc/dispatches \
             -d '{"event_type": "update-assets"}'
-      - name: Trigger APK source update using push
-        if: env.update_detected == 'true'
-        env:
-          TARGET_REPO_URL: https://x-access-token:${{ secrets.APK_SRC_REPO }}@github.com/asfu222/BAJPApkSrc.git
-        run: |
-          git clone "$TARGET_REPO_URL" BAJPApkSrc
-          date > BAJPApkSrc/.date
-          cd BAJPApkSrc
-          git add .date
-          git commit -m "Update date"
-          git push origin
 
       - name: Check last deploy status
         if: env.update_detected == 'false'

@@ -1,0 +1,64 @@
+name: Update Check
+
+on:
+  workflow_dispatch:
+  schedule:
+    # Run every Tuesday at 03:00, 05:00, and 09:00 UTC
+    - cron: '0 3,5,9 * * 2'
+    # Run everyday at 07:00 UTC
+    - cron: '0 7 * * *'
+
+jobs:
+  update-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Configure Git Identity
+        run: |
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "actions@github.com"
+
+      - name: Get cache key (JP)
+        id: get_jp_key
+        run: |
+          LM=$(curl -sIL "https://d.apkpure.net/b/XAPK/com.YostarJP.BlueArchive?version=latest" \
+               | grep -i "Last-Modified:" | cut -d' ' -f2-)
+          KEY=$(date -u -d "$LM" +%Y-%m-%dT%H:%M:%SZ || true)
+          echo "key=$KEY" >> $GITHUB_OUTPUT
+
+      - name: Check JP version
+        id: jp_cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            BlueArchiveLocalizationTools/Extracted/FlatData
+          key: japan-${{ steps.get_jp_key.outputs.key }}
+          lookup-only: true
+
+      - name: Trigger JP APK source update using push
+        if: steps.jp_cache.outputs.cache-hit != 'true'
+        env:
+          TARGET_REPO_URL: https://x-access-token:${{ secrets.APK_SRC_REPO }}@github.com/asfu222/BAJPApkSrc.git
+        run: |
+          git clone "$TARGET_REPO_URL" BAJPApkSrc
+          echo "${{ steps.get_jp_key.outputs.key }}" > BAJPApkSrc/.date
+          cd BAJPApkSrc
+          git add .date
+          if ! git diff --cached --quiet; then
+            git commit -m "Update date"
+            git push origin
+          fi
+          
+      - name: Dump JP
+        if: steps.jp_cache.outputs.cache-hit != 'true'
+        run: |
+          git clone --depth 1 https://github.com/asfu222/BlueArchiveLocalizationTools.git
+          cd BlueArchiveLocalizationTools
+          pip install -r requirements.txt
+          python3 setup_flatdata.py
+          
+      - name: Save JP Cache
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            BlueArchiveLocalizationTools/Extracted/FlatData
+          key: japan-${{ steps.get_jp_key.outputs.key }}
