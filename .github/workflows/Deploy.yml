@@ -296,7 +296,11 @@ jobs:
         run: |
           echo "commonpng-${{ env.LATEST_PNG_COMMIT }}-${{ hashFiles('BundlePackingInfo*.json') }}" > assets/static/bundle_version.hash
           git add assets/static/bundle_version.hash
-          git commit -m "更新图文版本号 [skip ci]"
+          if git diff --cached --quiet; then
+            echo "子模块已是最新状态"
+          else
+            git commit -m "更新图文版本号 [skip ci]"
+          fi
 
       - name: Update config files
         if: github.event_name != 'schedule'
