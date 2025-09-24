@@ -100,6 +100,7 @@
             <a href="https://github.com/asfu222/BACNLocalizationResources/actions/workflows/Deploy.yml">
 	      <img src="https://img.shields.io/github/actions/workflow/status/asfu222/BACNLocalizationResources/Deploy.yml?branch=main&label=部署状态（如红则未更新好）" alt = "GitHub Deploy status">
 	    </a>
+		<div id="update-time">上次APK更新时间：加载中...</div>
         </div>
     
         <div class="icons">
@@ -111,4 +112,20 @@
             </a>
         </div>
     </body>
+	<script>
+		fetch('apk/蔚蓝档案.apk', { method: 'HEAD' })
+		  .then(resp => {
+			const lastModified = resp.headers.get('Last-Modified');
+			if (lastModified) {
+			  document.getElementById('update-time').textContent = 
+				'上次APK更新时间：' + new Date(lastModified).toLocaleString();
+			} else {
+			  document.getElementById('update-time').textContent = '上次APK更新时间：未知';
+			}
+		  })
+		  .catch(err => {
+			console.error(err);
+			document.getElementById('update-time').textContent = '上次APK更新时间：获取失败';
+		  });
+	</script>
     </html>
