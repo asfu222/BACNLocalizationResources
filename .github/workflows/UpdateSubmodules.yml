@@ -16,6 +16,8 @@ jobs:
       uses: actions/checkout@v4
       with:
         submodules: false
+        fetch-depth: 1
+        token: ${{ secrets.RSS_REPO_TOKEN }}
 
     - name: Setup SSH Keys
       run: |
@@ -58,8 +60,8 @@ jobs:
           old_commit=""
         fi
         echo "Old commit: $old_commit"
-        echo "Latest commit: $LATEST_PNG_COMMIT"
-        if [ "$old_commit" != "$LATEST_PNG_COMMIT" ]; then
+        echo "Latest commit: ${{ steps.get_png_commit.outputs.LATEST_PNG_COMMIT }}"
+        if [ "$old_commit" != "${{ steps.get_png_commit.outputs.LATEST_PNG_COMMIT }}" ]; then
           echo "Commonpng commit updated."
           UPDATED=true
         else
