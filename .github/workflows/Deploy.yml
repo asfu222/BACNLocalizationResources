@@ -56,9 +56,10 @@ jobs:
             BlueArchiveLocalizationTools/Extracted/Table/ExcelDB
           key: ${{ runner.os }}-exceldb-${{ hashFiles('ExcelDB.db') }}
           
-      - name: Get latest commit hashes
+      - name: Get latest voice hash
+        id: get_voice_hash
         run: |
-          echo "LATEST_VOICE_COMMIT=$(git ls-remote https://x-access-token:${{ secrets.RSS_REPO_TOKEN }}@github.com/asfu222/scenariovoice.git HEAD | awk '{ print $1 }')" >> $GITHUB_ENV
+          echo "LATEST_VOICE_COMMIT=$(git ls-remote https://x-access-token:${{ secrets.RSS_REPO_TOKEN }}@github.com/asfu222/scenariovoice.git HEAD | awk '{ print $1 }')" >> $GITHUB_OUTPUT
 
       - name: Restore ScenarioVoice Cache
         id: scenariovoice_cache
@@ -68,7 +69,7 @@ jobs:
             assets/scenariovoice/latest/MediaResources/GameData/Audio/VOC_CN/zips.json
             assetsBuildSrc/scenariovoice/latest/MediaResources/GameData/voice_file_names.json
             assets/scenariovoice/latest/catalog.json
-          key: ${{ runner.os }}-scenariovoice-${{ env.LATEST_VOICE_COMMIT }}
+          key: ${{ runner.os }}-scenariovoice-${{ steps.get_voice_hash.outputs.LATEST_VOICE_COMMIT }}
 
       - name: Clone scenariovoice if necessary
         if: github.event_name != 'schedule' && steps.scenariovoice_cache.outputs.cache-hit != 'true'
@@ -130,7 +131,7 @@ jobs:
         with:
           path: |
             assets/beicheng/latest/TableBundles/ExcelDB.db
-          key: built_exceldb-latest-${{ hashFiles('assets/beicheng/latest/TableBundles/buildSrc/ExcelDB/*') }}-${{ env.LATEST_VOICE_COMMIT }}-${{ hashFiles('ExcelDB.db') }}
+          key: built_exceldb-latest-${{ hashFiles('assets/beicheng/latest/TableBundles/buildSrc/ExcelDB/*') }}-${{ steps.get_voice_hash.outputs.LATEST_VOICE_COMMIT }}-${{ hashFiles('ExcelDB.db') }}
 
       - uses: actions/cache@v4
         with:
@@ -262,16 +263,41 @@ jobs:
           ./update_bundles.sh
 
       - name: Get latest commonpng commit hash
+        id: get_png_commit
         run: |
-          echo "LATEST_PNG_COMMIT=$(git ls-remote git@github.com:asfu222/commonpng.git HEAD | awk '{ print $1 }')" >> $GITHUB_ENV
+          echo "LATEST_PNG_COMMIT=$(git ls-remote git@github.com:asfu222/commonpng.git HEAD | awk '{ print $1 }')" >> $GITHUB_OUTPUT
 
+      - name: Configure Git Identity
+        if: github.event_name != 'schedule'
+        run: |
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "actions@github.com"
+
+      - name: Update bundle version
+        if: github.event_name != 'schedule' && steps.commonpng_cache.outputs.cache-hit != 'true'
+        run: |
+          echo "commonpng-${{ steps.get_png_commit.outputs.LATEST_PNG_COMMIT }}-${{ hashFiles('BundlePackingInfo*.json') }}" > assets/static/bundle_version.hash
+          git add assets/static/bundle_version.hash
+          if git diff --cached --quiet; then
+            echo "子模块已是最新状态"
+          else
+            git commit -m "更新图文版本号 [skip ci]"
+          fi
+
+      - name: Push changes
+        if: github.event_name != 'schedule' && steps.commonpng_cache.outputs.cache-hit != 'true'
+        run: |
+          git reset --hard
+          git pull --rebase
+          git push origin
+  
       - name: Restore commonpng cache
         id: commonpng_cache
         uses: actions/cache@v4
         with:
           path: |
             assets/commonpng/latest/catalog.json
-          key: commonpng-${{ env.LATEST_PNG_COMMIT }}-${{ hashFiles('BundlePackingInfo*.json') }}
+          key: commonpng-${{ steps.get_png_commit.outputs.LATEST_PNG_COMMIT }}-${{ hashFiles('BundlePackingInfo*.json') }}
 
       - name: Clone commonpng if necessary
         if: github.event_name != 'schedule' && steps.commonpng_cache.outputs.cache-hit != 'true'
@@ -284,24 +310,7 @@ jobs:
         run: |
           chmod +x build_bundles.sh
           ./build_bundles.sh
-
-      - name: Configure Git Identity
-        if: github.event_name != 'schedule'
-        run: |
-          git config --global user.name "GitHub Actions"
-          git config --global user.email "actions@github.com"
-
-      - name: Update bundle version
-        if: github.event_name != 'schedule' && steps.commonpng_cache.outputs.cache-hit != 'true'
-        run: |
-          echo "commonpng-${{ env.LATEST_PNG_COMMIT }}-${{ hashFiles('BundlePackingInfo*.json') }}" > assets/static/bundle_version.hash
-          git add assets/static/bundle_version.hash
-          if git diff --cached --quiet; then
-            echo "子模块已是最新状态"
-          else
-            git commit -m "更新图文版本号 [skip ci]"
-          fi
-
+  
       - name: Update config files
         if: github.event_name != 'schedule'
         run: |
@@ -350,10 +359,3 @@ jobs:
           cd /home/ubuntu/nginx_redirect_server/ &&
           nohup timeout 600 ./clear-edge-cache.sh > clear-edge-cache.log 2>&1 &
           "
-
-      - name: Push changes
-        if: github.event_name != 'schedule' && steps.commonpng_cache.outputs.cache-hit != 'true'
-        run: |
-          git reset --hard
-          git pull --rebase
-          git push origin

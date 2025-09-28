@@ -16,10 +16,21 @@ jobs:
       uses: actions/checkout@v4
       with:
         submodules: false
-        fetch-depth: 1
-        token: ${{ secrets.RSS_REPO_TOKEN }}
 
-    - name: Check for updates in submodules' main branch
+    - name: Setup SSH Keys
+      run: |
+        mkdir -p ~/.ssh
+        echo "${{ secrets.COMMONPNG_DEPLOY_KEY }}" > ~/.ssh/id_ed25519
+        chmod 600 ~/.ssh/id_ed25519
+        ssh-keyscan github.com >> ~/.ssh/known_hosts
+
+    - name: Get latest commonpng commit hash
+      id: get_png_commit
+      run: |
+        echo "LATEST_PNG_COMMIT=$(git ls-remote git@github.com:asfu222/commonpng.git HEAD | awk '{ print $1 }')" >> $GITHUB_OUTPUT
+
+    - name: Check for updates
+      id: check_update
       run: |
         echo "Checking submodules..."
         UPDATED=false
@@ -40,10 +51,25 @@ jobs:
             echo "No update for submodule '$submodule'."
           fi
         done
-        echo "SUBMODULE_STATUS=$UPDATED" >> $GITHUB_ENV
+        echo "Checking if commonpng commit has changed..."
+        if [ -f assets/static/bundle_version.hash ]; then
+          old_commit=$(cut -d'-' -f2 < assets/static/bundle_version.hash)
+        else
+          old_commit=""
+        fi
+        echo "Old commit: $old_commit"
+        echo "Latest commit: $LATEST_PNG_COMMIT"
+        if [ "$old_commit" != "$LATEST_PNG_COMMIT" ]; then
+          echo "Commonpng commit updated."
+          UPDATED=true
+        else
+          echo "No update in commonpng commit."
+          UPDATED=false
+        fi
+        echo "SUBMODULE_STATUS=$UPDATED" >> $GITHUB_OUTPUT
 
     - name: Trigger follow-up workflow if update detected
-      if: env.SUBMODULE_STATUS == 'true'
+      if: steps.check_update.outputs.SUBMODULE_STATUS == 'true'
       run: |
         curl -X POST \
           -H "Accept: application/vnd.github+json" \
