@@ -16,7 +16,7 @@ def is_hidden(filepath: Path):
 
 ALLOWED_PATHS = [Path("assets/beicheng"), Path("assets/commonpng"), Path("assets/scenariovoice")]
 OUTPUT_FILE = Path("assets/catalog.html")
-STATIC_NAMES = ["BundlePackingInfo.json", "TableCatalog.bytes", "MediaCatalog.bytes", "catalog_Android.zip", "catalog_iOS.zip"]
+STATIC_NAMES = ["BundlePackingInfo.bytes", "BundlePackingInfo.json", "TableCatalog.bytes", "MediaCatalog.bytes", "catalog_Android.zip", "catalog_iOS.zip"]
 
 def calculate_hash64(name: str | bytes) -> int:
     if isinstance(name, str):

@@ -18,6 +18,11 @@ export $(grep -v '^#' ba.env | xargs)
 [ -f ./catalog_Android.zip ] && unzip -o ./catalog_Android.zip -d ./catalog_Android
 [ -f ./catalog_iOS.zip ] && unzip -o ./catalog_iOS.zip -d ./catalog_iOS
 
+chmod +x ./MemoryPackRepacker
+
+./MemoryPackRepacker deserialize asset BundlePackingInfo-iOS.bytes BundlePackingInfo-iOS.json
+./MemoryPackRepacker deserialize asset BundlePackingInfo-Android.bytes BundlePackingInfo-Android.json
+
 $PYTHON_CMD patch_bundleDL.py $ADDRESSABLE_CATALOG_URL
 
 # Zip catalog_Remotes

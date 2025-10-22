@@ -20,8 +20,8 @@ download_file() {
     done
 }
 
-download_file "${ADDRESSABLE_CATALOG_URL}/Android_PatchPack/BundlePackingInfo.json" "BundlePackingInfo-Android.json"
-download_file "${ADDRESSABLE_CATALOG_URL}/iOS_PatchPack/BundlePackingInfo.json" "BundlePackingInfo-iOS.json"
+download_file "${ADDRESSABLE_CATALOG_URL}/Android_PatchPack/BundlePackingInfo.bytes" "BundlePackingInfo-Android.bytes"
+download_file "${ADDRESSABLE_CATALOG_URL}/iOS_PatchPack/BundlePackingInfo.bytes" "BundlePackingInfo-iOS.bytes"
 # Switch to {OS}_PatchPack/BundlePackingInfo.json -> full patch zip
 download_file "${ADDRESSABLE_CATALOG_URL}/Android_PatchPack/catalog_Android.zip" "catalog_Android.zip"
 download_file "${ADDRESSABLE_CATALOG_URL}/iOS_PatchPack/catalog_iOS.zip" "catalog_iOS.zip"

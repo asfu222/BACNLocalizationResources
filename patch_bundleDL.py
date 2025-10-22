@@ -127,11 +127,15 @@ def apply_patch(root_url: str, platform: str):
         
         for bundle in assets_path.rglob("*.bundle"):
             bundle.unlink()
-        # Write updated BundlePackingInfo.json
-        out_bundle = assets_path / "BundlePackingInfo.json"
-        with out_bundle.open("w", encoding="utf-8") as f:
+
+        catalog_json_path = assets_path / "BundlePackingInfo.json"
+        with open(catalog_json_path, "w", encoding="utf-8") as f:
             json.dump(data, f, separators=(",", ":"), ensure_ascii=False)
-        print(f"{platform}: 已生成对应的 {out_bundle}")
+        subprocess.run([
+            "./MemoryPackRepacker", "serialize", "asset",
+            str(catalog_json_path), str(assets_path / "BundlePackingInfo.bytes")
+        ])
+        print(f"{platform}: 已生成对应的 BundlePackingInfo")
 
         # Update catalog_Remote.json
         catalog_dir = Path(f"./catalog_{platform}")
