@@ -297,7 +297,7 @@ jobs:
         with:
           path: |
             assets/commonpng/latest/catalog.json
-          key: commonpng-${{ steps.get_png_commit.outputs.LATEST_PNG_COMMIT }}-${{ hashFiles('BundlePackingInfo*.json') }}
+          key: commonpng-${{ steps.get_png_commit.outputs.LATEST_PNG_COMMIT }}-${{ hashFiles('BundlePackingInfo*.bytes') }}
 
       - name: Clone commonpng if necessary
         if: github.event_name != 'schedule' && steps.commonpng_cache.outputs.cache-hit != 'true'
