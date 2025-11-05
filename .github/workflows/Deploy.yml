@@ -20,6 +20,9 @@ jobs:
           submodules: recursive
           token: ${{ secrets.RSS_REPO_TOKEN }} # Read-only access to necessary repos
           persist-credentials: false
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.13' 
       - name: Clone build dependencies
         run: git clone --depth 1 https://github.com/asfu222/BlueArchiveLocalizationTools.git
         
