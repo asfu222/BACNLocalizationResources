@@ -37,7 +37,7 @@ fi
   find ../assets -type d -path '*/buildSrc/ExcelDB' | while read -r d; do
     out=$(echo "$d" | sed 's|/buildSrc/ExcelDB/*$|/ExcelDB.db|')
     if [ ! -f "$out" ]; then
-      echo ../assetsBuildSrc/scenariovoice/latest/MediaResources/GameData/voice_file_names.json ../ExcelDB.db "$d" "$out"
+      echo $BUNDLE_VERSION ../assetsBuildSrc/scenariovoice/latest/MediaResources/GameData/voice_file_names.json ../ExcelDB.db "$d" "$out"
       "$PYTHON_CMD" build_excel_db.py \
         ../assetsBuildSrc/scenariovoice/latest/MediaResources/GameData/voice_file_names.json \
         ../ExcelDB.db "$d" "$out"
