@@ -39,7 +39,7 @@ fi
     if [ ! -f "$out" ]; then
       echo $BUNDLE_VERSION ../assetsBuildSrc/scenariovoice/latest/MediaResources/GameData/voice_file_names.json ../ExcelDB.db "$d" "$out"
       "$PYTHON_CMD" build_excel_db.py \
-        ../assetsBuildSrc/scenariovoice/latest/MediaResources/GameData/voice_file_names.json \
+        $BUNDLE_VERSION ../assetsBuildSrc/scenariovoice/latest/MediaResources/GameData/voice_file_names.json \
         ../ExcelDB.db "$d" "$out"
     else
       echo "Skipping: $out already exists"
